@@ -1,0 +1,175 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Station {
+  id          String   @id @default(uuid())
+  stationCode String   @unique
+  stationName String
+  city        String
+  state       String
+  latitude    Float
+  longitude   Float
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  aqiReadings AqiReading[]
+  weatherData WeatherData[]
+
+  @@map("stations")
+}
+
+model Zone {
+  id        String   @id @default(uuid())
+  zoneCode  String   @unique
+  zoneName  String
+  city      String
+  geometry  Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  hotspots      Hotspot[]
+  roads         Road[]
+  interventions Intervention[]
+
+  @@map("zones")
+}
+
+model Hotspot {
+  id           String   @id @default(uuid())
+  zoneId       String?
+  clusterId    String?
+  latitude     Float
+  longitude    Float
+  aqi          Float
+  pm25         Float?
+  pm10         Float?
+  stationCount Int      @default(1)
+  radius       Float    @default(0)
+  severity     String
+  detectedAt   DateTime @default(now())
+
+  zone Zone? @relation(fields: [zoneId], references: [id])
+
+  @@map("hotspots")
+}
+
+model WeatherData {
+  id            String   @id @default(uuid())
+  stationId     String
+  timestamp     DateTime
+  temperature   Float
+  humidity      Float
+  windSpeed     Float
+  windDirection Float
+  pressure      Float
+  rainfall      Float
+  createdAt     DateTime @default(now())
+
+  station Station @relation(fields: [stationId], references: [id])
+
+  @@index([stationId])
+  @@index([timestamp])
+  @@index([temperature])
+  @@index([humidity])
+  @@index([windSpeed])
+  @@map("weather_data")
+}
+
+model AqiReading {
+  id        String   @id @default(uuid())
+  stationId String
+  timestamp DateTime
+  aqi       Float
+  pm25      Float?
+  pm10      Float?
+  no2       Float?
+  so2       Float?
+  co        Float?
+  o3        Float?
+  nh3       Float?
+  createdAt DateTime @default(now())
+
+  station Station @relation(fields: [stationId], references: [id])
+
+  @@index([stationId])
+  @@index([timestamp])
+  @@index([aqi])
+  @@map("aqi_readings")
+}
+
+model ForecastResult {
+  id           String   @id @default(uuid())
+  stationId    String
+  forecastAQI  Float
+  confidence   Float
+  category     String
+  riskLevel    String
+  forecastType String // '24h', '48h', '72h'
+  modelVersion String
+  forecastDate DateTime
+  createdAt    DateTime @default(now())
+
+  @@map("forecast_results")
+}
+
+model Road {
+  id       String  @id @default(uuid())
+  roadCode String  @unique
+  roadName String
+  geometry Json // Turf.js LineString coordinates
+  zoneId   String?
+
+  zone    Zone?         @relation(fields: [zoneId], references: [id])
+  traffic TrafficData[]
+
+  @@map("roads")
+}
+
+model TrafficData {
+  id              String   @id @default(uuid())
+  roadId          String
+  latitude        Float
+  longitude       Float
+  congestionScore Int
+  averageSpeed    Float
+  vehicleCount    Int
+  timestamp       DateTime
+  createdAt       DateTime @default(now())
+
+  road Road @relation(fields: [roadId], references: [id])
+
+  @@index([timestamp])
+  @@index([roadId])
+  @@index([congestionScore])
+  @@index([latitude, longitude])
+  @@map("traffic_data")
+}
+
+model Intervention {
+  id                    String   @id @default(uuid())
+  zoneId                String
+  forecastId            String?
+  priority              String
+  riskLevel             String
+  title                 String
+  description           String
+  recommendedActions    String[]
+  expectedImpact        String
+  estimatedAQIReduction String
+  postInterventionAQI   Float?
+  confidenceScore       Float
+  createdAt             DateTime @default(now())
+
+  zone Zone @relation(fields: [zoneId], references: [id])
+
+  @@index([zoneId])
+  @@index([priority])
+  @@index([riskLevel])
+  @@map("interventions")
+}

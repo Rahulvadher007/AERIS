@@ -1,0 +1,22 @@
+# Node
+**/node_modules/
+
+# Next.js
+**/.next/
+
+# Environment
+**/.env
+**/.env.*
+**/.env.local
+
+# Build
+**/dist/
+
+# Python
+**/__pycache__/
+**/*.pyc
+
+# Logs
+*.log
+
+backend/ml-service/data/master_dataset.csv
