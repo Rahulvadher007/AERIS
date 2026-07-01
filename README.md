@@ -228,71 +228,69 @@ The NestJS backend exposes secure, scalable REST endpoints. Key routes include:
 
 ---
 
-## ⚙️ Installation
+## 🚀 Production Deployment
 
-### Prerequisites
-- Node.js (v18+)
-- PostgreSQL (v15+)
-- Git
+AERIS is optimized for modern cloud deployments across Vercel and Railway.
 
-### 1. Clone the Repository
-```bash
-git clone https://github.com/Rahulvadher007/AERIS.git
-cd AERIS
-```
+### 1. Database (Railway PostgreSQL)
+1. Create a new **PostgreSQL** database on Railway.
+2. Retrieve the `DATABASE_URL` (e.g., `postgresql://...`).
 
-### 2. Backend Setup
-```bash
-cd backend
-npm install
-```
-**Environment Variables**: Create a `.env` file in the `backend` directory.
-```env
-DATABASE_URL="postgresql://user:password@localhost:5432/aeris"
-PORT=3001
-OPENWEATHER_API_KEY="your_api_key"
-TOMTOM_API_KEY="your_api_key"
-OPENAQ_API_KEY="your_api_key"
-```
+### 2. Backend API (NestJS on Railway)
+1. Connect your GitHub repository to a new Railway project.
+2. Select the `/backend` directory.
+3. Add the following Environment Variables in Railway:
+   - `DATABASE_URL`: (From Step 1)
+   - `PORT`: `3001`
+   - `NODE_ENV`: `production`
+   - `FRONTEND_URL`: `https://your-frontend.vercel.app`
+   - `OPENWEATHER_API_KEY`: Your key
+   - `TOMTOM_API_KEY`: Your key
+   - `OPENAQ_API_KEY`: Your key
+4. Deploy! The `Procfile` will automatically run `npm run start:prod` and execute Prisma migrations (`npx prisma migrate deploy`).
 
-**Database Initialization**:
-```bash
-npx prisma generate
-npx prisma migrate dev --name init
-npx prisma db seed
-```
+### 3. ML Service (FastAPI on Railway)
+1. Add a new service in your Railway project, pointing to `/backend/ml-service`.
+2. Ensure the environment has Python 3.10+ installed.
+3. Railway will detect `requirements.txt` and the `Procfile` to run Uvicorn.
+4. Set any required ML environment variables.
+5. The service will expose `/health`, `/predict`, and `/model-info`.
 
-### 3. Frontend Setup
-```bash
-cd ../frontend
-npm install
-```
-**Environment Variables**: Create a `.env.local` file in the `frontend` directory.
-```env
-NEXT_PUBLIC_API_URL="http://localhost:3001"
-```
+### 4. Command Center (Next.js on Vercel)
+1. Import the repository into **Vercel**.
+2. Set the Root Directory to `frontend`.
+3. Configure the Environment Variable:
+   - `NEXT_PUBLIC_API_URL`: Your deployed Backend Railway URL (e.g., `https://aeris-api.up.railway.app`).
+4. Vercel will automatically build and deploy the optimized edge application.
 
 ---
 
-## 🚀 Running the Project
+## 💻 Local Development
 
-For proper operation, services must be started in this order:
+1. **Clone the Repository**
+   ```bash
+   git clone https://github.com/Rahulvadher007/AERIS.git
+   cd AERIS
+   ```
 
-1. **Database**: Ensure your PostgreSQL instance is running.
-2. **Backend**:
+2. **Backend Setup**
    ```bash
    cd backend
+   npm install
+   # Create .env with DATABASE_URL
+   npx prisma generate
+   npx prisma migrate dev --name init
+   npx prisma db seed
    npm run start:dev
    ```
-   *The API will be available at `http://localhost:3001`*
-3. **Frontend**:
+
+3. **Frontend Setup**
    ```bash
-   cd frontend
+   cd ../frontend
+   npm install
+   # Create .env.local with NEXT_PUBLIC_API_URL="http://localhost:3001"
    npm run dev
    ```
-   *The Command Center will be available at `http://localhost:3000`*
-
----
 
 ## 📡 Data Sources
 

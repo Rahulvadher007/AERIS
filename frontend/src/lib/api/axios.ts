@@ -11,10 +11,10 @@ declare module 'axios' {
 }
 
 const envApiUrl = process.env.NEXT_PUBLIC_API_URL;
-const API_URL = (envApiUrl && envApiUrl.trim() !== "") ? envApiUrl : 'http://localhost:3001';
+const API_URL = envApiUrl || (process.env.NODE_ENV === 'production' ? 'https://aeris-api.up.railway.app' : 'http://localhost:3001');
 
 export const apiClient = axios.create({
-  baseURL: 'http://127.0.0.1:3001',
+  baseURL: API_URL,
   timeout: 15000,
 });
 

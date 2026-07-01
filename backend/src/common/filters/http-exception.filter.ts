@@ -25,7 +25,9 @@ export class HttpExceptionFilter implements ExceptionFilter {
         status = HttpStatus.NOT_FOUND;
         message = 'Record not found';
       } else {
-        message = exception.message;
+        message = process.env.NODE_ENV === 'production' 
+          ? 'Internal server error occurred' 
+          : exception.message;
       }
     }
 

@@ -2,11 +2,20 @@ import os
 import joblib
 import pandas as pd
 from fastapi import FastAPI, BackgroundTasks, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Dict
 from train import train_pipeline
 
 app = FastAPI(title="Urban AI - ML Forecasting API", version="1.0")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], # In production, restrict this to the backend domain
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 class PredictRequest(BaseModel):
     features: Dict[str, float]
@@ -99,4 +108,13 @@ async def train(background_tasks: BackgroundTasks):
 
 @app.get("/health")
 async def health():
-    return {"status": "ok"}
+    return {"status": "ok", "service": "AERIS ML Service", "environment": os.getenv("ENVIRONMENT", "production")}
+
+@app.get("/model-info")
+async def model_info():
+    return {
+        "models_available": ["aqi", "pm25", "pm10"],
+        "horizons_supported": ["24h", "48h", "72h"],
+        "algorithm": "XGBoostRegressor",
+        "version": "1.0"
+    }
