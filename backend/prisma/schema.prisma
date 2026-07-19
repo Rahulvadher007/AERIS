@@ -204,6 +204,7 @@ model LandUseFeature {
 
   @@index([city])
   @@index([category])
+  @@unique([city, category, latitude, longitude])
   @@map("land_use_features")
 }
 
