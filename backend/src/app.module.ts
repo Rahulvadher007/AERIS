@@ -16,6 +16,7 @@ import { IngestionModule } from './modules/ingestion/ingestion.module';
 import { SatelliteModule } from './modules/satellite/satellite.module';
 import { LandUseModule } from './modules/landuse/landuse.module';
 import { VulnerabilityModule } from './modules/vulnerability/vulnerability.module';
+import { EvidenceModule } from './modules/evidence/evidence.module';
 import { AgentsModule } from './agents/agents.module';
 
 @Module({
@@ -35,6 +36,7 @@ import { AgentsModule } from './agents/agents.module';
     SatelliteModule,
     LandUseModule,
     VulnerabilityModule,
+    EvidenceModule,
     AgentsModule,
   ],
   controllers: [AppController],
