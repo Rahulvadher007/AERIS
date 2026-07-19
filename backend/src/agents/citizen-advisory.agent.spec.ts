@@ -6,7 +6,7 @@ import { PrismaService } from '../database/prisma.service';
 describe('CitizenAdvisoryAgent', () => {
   let agent: CitizenAdvisoryAgent;
   const vulnMock = { computeScore: jest.fn().mockResolvedValue({ score: 0.7, poiCounts: {} }) };
-  const prismaMock = { advisory: { create: jest.fn() } };
+  const prismaMock = { advisory: { create: jest.fn().mockResolvedValue({}) } };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
