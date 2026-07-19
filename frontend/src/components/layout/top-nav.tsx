@@ -8,7 +8,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   LayoutDashboard, Radio, Activity, CloudRain, Car, TrendingUp, 
   Map, AlertTriangle, Lightbulb, Settings, 
-  ChevronDown, Clock, Menu, X, ShieldAlert
+  ChevronDown, Clock, Menu, X, ShieldAlert,
+  BarChart3, MessageSquare
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -28,6 +29,8 @@ const SECONDARY_ROUTES = [
   { href: "/hotspots", label: "Hotspots", icon: AlertTriangle, description: "View detected pollution clusters." },
   { href: "/recommendations", label: "Recommendations", icon: Lightbulb, description: "AI-generated advisory actions." },
   { href: "/interventions", label: "Interventions", icon: ShieldAlert, description: "AI-generated intervention plans." },
+  { href: "/evidence", label: "Evidence", icon: BarChart3, description: "Judging proof: RMSE, confidence, response time." },
+  { href: "/advisories", label: "Advisories", icon: MessageSquare, description: "Multilingual citizen health advisories." },
   { href: "/settings", label: "Settings", icon: Settings, description: "Platform configuration." },
 ];
 
