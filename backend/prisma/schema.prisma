@@ -218,6 +218,7 @@ model VulnerabilityScore {
 
   zone Zone @relation(fields: [zoneId], references: [id])
   @@index([zoneId])
+  @@unique([zoneId])
   @@map("vulnerability_scores")
 }
 
