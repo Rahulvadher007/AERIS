@@ -10,7 +10,7 @@ Maps each judging criterion to a live AERIS feature and a concrete demo step.
 
 - **Slide 2: Vulnerability-Aware Citizen Advisories**
   - What to show: CitizenAdvisoryAgent generating multilingual, vulnerability-tailored advisories (elderly/child/respiratory risk badges) via LLM.
-  - Feature/endpoint that proves it: `GET /advisories` + `VulnerabilityService` + LLM (Gemini/OpenAI).
+  - Feature/endpoint that proves it: `POST /agents/coordinate` (returns `citizenAdvisories`) + `VulnerabilityService` + LLM (Gemini/OpenAI).
 
 ## 2. Business Impact — 25%
 
@@ -29,7 +29,7 @@ Maps each judging criterion to a live AERIS feature and a concrete demo step.
   - Feature/endpoint that proves it: `Ingestion` module + live API calls (synthetic only as fallback).
 
 - **Slide 2: Forecast Evaluation Harness**
-  - What to show: An RMSE-vs-persistence evaluation harness (`ml-service/eval_harness.py`) that compares the XGBoost forecast against a naive persistence baseline and reports improvement %. NOTE: the `/evidence` RMSE figure is currently an illustrative placeholder; the harness runs on a held-out series and the live backtest is wired into the evidence endpoint as next-step work.
+  - What to show: An illustrative RMSE-vs-persistence harness (`ml-service/eval_harness.py`) (model wiring pending). NOTE: the `/evidence` RMSE figure is currently an illustrative placeholder; the harness runs on a held-out series and the live backtest is wired into the evidence endpoint as next-step work.
   - Feature/endpoint that proves it: `eval_harness` (RMSE vs persistence) + `Forecast` module.
 
 ## 4. Scalability — 15%
@@ -46,7 +46,7 @@ Maps each judging criterion to a live AERIS feature and a concrete demo step.
 
 - **Slide 1: Multilingual Advisory Cards**
   - What to show: Tamil / Kannada / Hindi advisory cards with clear risk levels and vulnerability badges.
-  - Feature/endpoint that proves it: `GET /advisories` + `CitizenAdvisoryAgent` + LLM.
+  - Feature/endpoint that proves it: `POST /agents/coordinate` (returns `citizenAdvisories`) + `CitizenAdvisoryAgent` + LLM.
 
 - **Slide 2: Evidence Dashboard**
   - What to show: The `/evidence` page presenting RMSE, attribution confidence, and signal-to-intervention in a judge-friendly, single-screen view.

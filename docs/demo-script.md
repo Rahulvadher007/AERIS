@@ -14,12 +14,12 @@ A judge-facing walkthrough. Keep pacing tight; each beat is ~15–20 seconds.
 
 3. **Open /evidence (1:10–2:10)**
     - Navigate to the `/evidence` page.
-    - Point to the **RMSE vs persistence** evaluation harness (`ml-service/eval_harness.py`) comparing the XGBoost forecast to a naive baseline — note this metric is currently an illustrative placeholder pending the live DB backtest.
+    - Point to the **RMSE vs persistence** evaluation harness (`ml-service/eval_harness.py`) — an illustrative RMSE-vs-persistence harness (model wiring pending) — note this metric is currently an illustrative placeholder pending the live DB backtest.
     - Point to **attribution confidence** and **signal-to-intervention** metrics.
     - Narrate: "Every claim is verifiable: forecast accuracy is benchmarked against persistence, attribution carries a confidence value, and we trace each signal to a concrete intervention."
 
 4. **Open /advisories (2:10–2:50)**
-   - Show the `/advisories` page with **Tamil, Kannada, and Hindi** advisory cards.
+   - Show the `/advisories` page (data served from `citizenAdvisories` in the `POST /agents/coordinate` response) with **Tamil, Kannada, and Hindi** advisory cards.
    - Highlight vulnerability badges (elderly / child / respiratory risk).
    - Narrate: "Advisories are localized and vulnerability-aware, so the right message reaches the right community."
 
