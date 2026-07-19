@@ -42,8 +42,6 @@ export class SatelliteService {
       return {};
     }
     try {
-      // Real fetch logic (Copernicus OData + FIRMS CSV) implemented here;
-      // on any error return {} so callers fall back gracefully.
       return {};
     } catch (e) {
       this.logger.error(`Satellite fetch failed: ${e.message}`);
