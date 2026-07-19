@@ -36,6 +36,7 @@ model Zone {
   hotspots      Hotspot[]
   roads         Road[]
   interventions Intervention[]
+  vulnerabilityScores VulnerabilityScore[]
 
   @@map("zones")
 }
@@ -172,4 +173,67 @@ model Intervention {
   @@index([priority])
   @@index([riskLevel])
   @@map("interventions")
+}
+
+model SatelliteReading {
+  id              String   @id @default(uuid())
+  city            String
+  latitude        Float
+  longitude       Float
+  no2             Float?
+  so2             Float?
+  thermalAnomaly  Float?
+  timestamp       DateTime
+  source          String
+  createdAt       DateTime @default(now())
+
+  @@index([city])
+  @@index([latitude, longitude])
+  @@index([timestamp])
+  @@map("satellite_readings")
+}
+
+model LandUseFeature {
+  id           String   @id @default(uuid())
+  city         String
+  category     String // INDUSTRIAL, CONSTRUCTION, MAJOR_ROAD, HOSPITAL, SCHOOL, ELDERLY_CARE
+  latitude     Float
+  longitude    Float
+  name         String?
+  fetchedAt    DateTime @default(now())
+
+  @@index([city])
+  @@index([category])
+  @@map("land_use_features")
+}
+
+model VulnerabilityScore {
+  id         String   @id @default(uuid())
+  zoneId     String
+  score      Float // 0-1
+  populationDensity Float?
+  poiCounts  Json
+  computedAt DateTime @default(now())
+
+  zone Zone @relation(fields: [zoneId], references: [id])
+  @@index([zoneId])
+  @@map("vulnerability_scores")
+}
+
+model Advisory {
+  id           String   @id @default(uuid())
+  zoneId       String
+  city         String
+  language     String // en, hi, ta, kn
+  riskLevel    String
+  message      String
+  ttsScript    String?
+  recommendedActions String[]
+  forecastAQI  Float
+  vulnerabilityScore Float
+  createdAt    DateTime @default(now())
+
+  @@index([zoneId])
+  @@index([city])
+  @@map("advisories")
 }
