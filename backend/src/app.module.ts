@@ -13,6 +13,9 @@ import { HotspotsModule } from './modules/hotspots/hotspots.module';
 import { TrafficModule } from './modules/traffic/traffic.module';
 import { InterventionsModule } from './modules/interventions/interventions.module';
 import { IngestionModule } from './modules/ingestion/ingestion.module';
+import { SatelliteModule } from './modules/satellite/satellite.module';
+import { LandUseModule } from './modules/landuse/landuse.module';
+import { VulnerabilityModule } from './modules/vulnerability/vulnerability.module';
 import { AgentsModule } from './agents/agents.module';
 
 @Module({
@@ -29,6 +32,9 @@ import { AgentsModule } from './agents/agents.module';
     TrafficModule,
     InterventionsModule,
     IngestionModule,
+    SatelliteModule,
+    LandUseModule,
+    VulnerabilityModule,
     AgentsModule,
   ],
   controllers: [AppController],

@@ -3,6 +3,9 @@ import { DatabaseModule } from '../database/database.module';
 import { ForecastModule } from '../modules/forecast/forecast.module';
 import { HotspotsModule } from '../modules/hotspots/hotspots.module';
 import { InterventionsModule } from '../modules/interventions/interventions.module';
+import { SatelliteModule } from '../modules/satellite/satellite.module';
+import { LandUseModule } from '../modules/landuse/landuse.module';
+import { VulnerabilityModule } from '../modules/vulnerability/vulnerability.module';
 
 import { AQIAgent } from './aqi.agent';
 import { WeatherAgent } from './weather.agent';
@@ -21,6 +24,9 @@ import { AgentsController } from './agents.controller';
     ForecastModule,
     HotspotsModule,
     InterventionsModule,
+    SatelliteModule,
+    LandUseModule,
+    VulnerabilityModule,
   ],
   controllers: [AgentsController],
   providers: [
