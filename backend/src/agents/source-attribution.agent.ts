@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import * as turf from '@turf/turf';
 import { PrismaService } from '../database/prisma.service';
 import { SatelliteService } from '../modules/satellite/satellite.service';
 import { LandUseService } from '../modules/landuse/landuse.service';
@@ -12,6 +13,20 @@ export class SourceAttributionAgent {
     private readonly landUse: LandUseService,
   ) {}
 
+  private zoneCentroid(zone: any): { lat: number; lon: number } {
+    try {
+      const geom = zone?.geometry;
+      if (geom?.coordinates) {
+        const poly = turf.polygon(geom.coordinates);
+        const c = turf.centroid(poly);
+        return { lat: c.geometry.coordinates[1], lon: c.geometry.coordinates[0] };
+      }
+    } catch (e) {
+      this.logger.warn(`zoneCentroid failed: ${e.message}`);
+    }
+    return { lat: 28.61, lon: 77.23 };
+  }
+
   async attributeSources(
     zones: any[],
     trafficMap: Record<string, number>,
@@ -19,7 +34,8 @@ export class SourceAttributionAgent {
   ): Promise<any[]> {
     const results = [];
     for (const zone of zones) {
-      const sat = await this.satellite.getNearestReading(zone.latitude ?? 28.61, zone.longitude ?? 77.23).catch(() => null);
+      const center = this.zoneCentroid(zone);
+      const sat = await this.satellite.getNearestReading(center.lat, center.lon).catch(() => null);
       const lu = await this.landUse.getLandUseForZone(zone).catch(() => ({ industrialPct: 20, constructionPct: 10, roadDensity: 3 }));
 
       const avgTraffic = zone.roads?.length

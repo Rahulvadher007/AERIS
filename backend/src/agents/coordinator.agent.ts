@@ -125,6 +125,8 @@ export class CoordinatorAgent {
       this.logger.log('Coordinator Agent: Multi-agent orchestration sweep completed successfully.');
       return {
         success: true,
+        attributions,
+        citizenAdvisories: advisories,
         summary: {
           validatedAqiCount: validatedAqi.length,
           validatedWeatherCount: validatedWeather.length,
