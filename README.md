@@ -300,7 +300,7 @@ AERIS is built for real-world application and utilizes live production data:
 - **[OpenWeather](https://openweathermap.org/)**: Real-time meteorological data for dispersion analysis.
 - **[TomTom Traffic API](https://developer.tomtom.com/)**: Live routing and congestion indices.
 
-*(Note: No mock data is used in production. The platform relies entirely on verifiable API ingestion).*
+*(Note: Live ingestion uses OpenAQ, Copernicus Sentinel-5P, NASA FIRMS, and OSM Overpass. Synthetic seed data is used strictly as a fallback when live APIs are unavailable or rate-limited, and is never represented as real in the UI or evaluations).*
 
 ---
 
