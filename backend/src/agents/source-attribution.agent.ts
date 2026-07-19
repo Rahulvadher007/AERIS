@@ -56,7 +56,7 @@ export class SourceAttributionAgent {
         dominantSource, confidence,
         supportingEvidence: [
           sat ? 'SENTINEL5P_NO2' : null,
-          sat?.thermalAnomaly ? 'MODIS_THERMAL' : null,
+          thermal ? 'MODIS_THERMAL' : null,
           'OSM_LANDUSE',
         ].filter(Boolean),
       });
