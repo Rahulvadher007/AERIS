@@ -1,74 +1,66 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
+import { SatelliteService } from '../modules/satellite/satellite.service';
+import { LandUseService } from '../modules/landuse/landuse.service';
 
 @Injectable()
 export class SourceAttributionAgent {
   private readonly logger = new Logger(SourceAttributionAgent.name);
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly satellite: SatelliteService,
+    private readonly landUse: LandUseService,
+  ) {}
 
-  constructor(private readonly prisma: PrismaService) {}
-
-  /**
-   * Estimates source contributions (Traffic, Industry, Construction, Background) per zone.
-   */
-  async attributeSources(zones: any[], trafficMap: Record<string, number>, windSpeedMap: Record<string, number>): Promise<any[]> {
-    this.logger.log(`Source Attribution Agent: Apportioning sources for ${zones.length} zones...`);
-    const attributions = [];
-
+  async attributeSources(
+    zones: any[],
+    trafficMap: Record<string, number>,
+    windSpeedMap: Record<string, number>,
+  ): Promise<any[]> {
+    const results = [];
     for (const zone of zones) {
-      // 1. Calculate Traffic Congestion average for the zone
-      let avgTraffic = 0;
-      let validRoads = 0;
-      zone.roads.forEach((r: any) => {
-        const score = trafficMap[r.id];
-        if (score !== undefined) {
-          avgTraffic += score;
-          validRoads++;
-        }
+      const sat = await this.satellite.getNearestReading(zone.latitude ?? 28.61, zone.longitude ?? 77.23).catch(() => null);
+      const lu = await this.landUse.getLandUseForZone(zone).catch(() => ({ industrialPct: 20, constructionPct: 10, roadDensity: 3 }));
+
+      const avgTraffic = zone.roads?.length
+        ? zone.roads.reduce((s: number, r: any) => s + (trafficMap[r.id] ?? 35), 0) / zone.roads.length
+        : 35;
+      const windSpeed = windSpeedMap[zone.city] ?? 3.0;
+      const no2 = sat?.no2 ?? 0;
+      const thermal = sat?.thermalAnomaly ?? 0;
+
+      const trafficW = avgTraffic * 0.8 + (lu.roadDensity || 0) * 2;
+      const industryW = lu.industrialPct * 1.2 + no2 * 200000;
+      const constructionW = lu.constructionPct * 1.5;
+      const biomassW = thermal > 300 ? (thermal - 300) * 0.5 : 5;
+      const backgroundW = 15 + (windSpeed < 2 ? 25 : 0);
+
+      const total = trafficW + industryW + constructionW + biomassW + backgroundW || 1;
+      const round = (w: number) => Math.round((w / total) * 100);
+      let traffic = round(trafficW), industry = round(industryW), construction = round(constructionW), biomass = round(biomassW);
+      let background = 100 - traffic - industry - construction - biomass;
+      if (background < 0) { background = 0; }
+
+      const signalsPresent = [!!sat, !!lu.industrialPct, avgTraffic > 0].filter(Boolean).length;
+      const confidence = Number((0.4 + 0.2 * signalsPresent).toFixed(2));
+
+      const dominantSource =
+        biomass > industry && biomass > traffic ? 'BIOMASS_BURNING'
+        : industry > traffic ? 'INDUSTRIAL_EMISSIONS'
+        : windSpeed < 2 ? 'METEOROLOGICAL_STAGNATION'
+        : 'VEHICULAR_TRAFFIC';
+
+      results.push({
+        zoneId: zone.id, zoneName: zone.zoneName, city: zone.city,
+        attribution: { traffic, industry, construction, biomassBurning: biomass, background },
+        dominantSource, confidence,
+        supportingEvidence: [
+          sat ? 'SENTINEL5P_NO2' : null,
+          sat?.thermalAnomaly ? 'MODIS_THERMAL' : null,
+          'OSM_LANDUSE',
+        ].filter(Boolean),
       });
-      const trafficCongestion = validRoads > 0 ? avgTraffic / validRoads : 35;
-
-      // 2. Hotspot Count
-      const hotspotCount = zone.hotspots.length;
-
-      // 3. Meteorological Stagnation Factor
-      const windSpeed = windSpeedMap[zone.city] || 3.0;
-
-      // 4. Compute weight-based attribution
-      const trafficWeight = trafficCongestion * 0.8;
-      const hotspotWeight = hotspotCount * 15;
-      const stagnationWeight = windSpeed < 2.0 ? 40 : 10;
-      const backgroundWeight = 15; // Constant background level
-
-      const totalWeight = trafficWeight + hotspotWeight + stagnationWeight + backgroundWeight;
-
-      const trafficPercent = Math.round((trafficWeight / totalWeight) * 100);
-      const industryPercent = Math.max(10, Math.round((hotspotWeight / totalWeight) * 85));
-      const constructionPercent = Math.round((backgroundWeight / totalWeight) * 100);
-      const backgroundPercent = 100 - trafficPercent - industryPercent - constructionPercent;
-
-      const attribution = {
-        zoneId: zone.id,
-        zoneName: zone.zoneName,
-        city: zone.city,
-        attribution: {
-          traffic: trafficPercent,
-          industry: industryPercent,
-          construction: constructionPercent,
-          background: backgroundPercent,
-        },
-        dominantSource: this.getDominantSource(trafficPercent, industryPercent, windSpeed),
-      };
-
-      attributions.push(attribution);
     }
-
-    return attributions;
-  }
-
-  private getDominantSource(traffic: number, industry: number, windSpeed: number): string {
-    if (windSpeed < 2.0) return 'METEOROLOGICAL_STAGNATION';
-    if (traffic > industry) return 'VEHICULAR_TRAFFIC';
-    if (industry > 25) return 'INDUSTRIAL_EMISSIONS';
-    return 'MIXED_BACKGROUND';
+    return results;
   }
 }
