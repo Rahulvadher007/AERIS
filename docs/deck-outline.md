@@ -28,9 +28,9 @@ Maps each judging criterion to a live AERIS feature and a concrete demo step.
   - What to show: Real-time ingestion from OpenAQ, OpenWeather, TomTom, Sentinel-5P, FIRMS, OSM Overpass through the `Ingestion` module with no reliance on mock data.
   - Feature/endpoint that proves it: `Ingestion` module + live API calls (synthetic only as fallback).
 
-- **Slide 2: Rigorous Forecast Evaluation**
-  - What to show: RMSE-vs-persistence evaluation harness proving forecast skill over a naive baseline.
-  - Feature/endpoint that proves it: `eval_harness` (RMSE vs persistence) surfaced on `/evidence` + `Forecast` module.
+- **Slide 2: Forecast Evaluation Harness**
+  - What to show: An RMSE-vs-persistence evaluation harness (`ml-service/eval_harness.py`) that compares the XGBoost forecast against a naive persistence baseline and reports improvement %. NOTE: the `/evidence` RMSE figure is currently an illustrative placeholder; the harness runs on a held-out series and the live backtest is wired into the evidence endpoint as next-step work.
+  - Feature/endpoint that proves it: `eval_harness` (RMSE vs persistence) + `Forecast` module.
 
 ## 4. Scalability — 15%
 

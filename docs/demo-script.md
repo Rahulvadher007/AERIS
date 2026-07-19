@@ -13,10 +13,10 @@ A judge-facing walkthrough. Keep pacing tight; each beat is ~15–20 seconds.
    - Narrate: "One call orchestrates nine agents — forecasting, hotspotting, satellite+land-use source attribution with confidence, and vulnerability-aware advisories."
 
 3. **Open /evidence (1:10–2:10)**
-   - Navigate to the `/evidence` page.
-   - Point to **RMSE vs persistence** from the evaluation harness — proving forecast skill over a naive baseline.
-   - Point to **attribution confidence** and **signal-to-intervention** metrics.
-   - Narrate: "Every claim is verifiable: forecast accuracy beats persistence, attribution carries a confidence value, and we trace each signal to a concrete intervention."
+    - Navigate to the `/evidence` page.
+    - Point to the **RMSE vs persistence** evaluation harness (`ml-service/eval_harness.py`) comparing the XGBoost forecast to a naive baseline — note this metric is currently an illustrative placeholder pending the live DB backtest.
+    - Point to **attribution confidence** and **signal-to-intervention** metrics.
+    - Narrate: "Every claim is verifiable: forecast accuracy is benchmarked against persistence, attribution carries a confidence value, and we trace each signal to a concrete intervention."
 
 4. **Open /advisories (2:10–2:50)**
    - Show the `/advisories` page with **Tamil, Kannada, and Hindi** advisory cards.
