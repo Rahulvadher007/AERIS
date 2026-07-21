@@ -73,6 +73,7 @@ export function TopNav() {
             src="/assets/logo/aeris-logo.png"
             alt="AERIS - Air Environmental Response & Intelligence System"
             fill
+            sizes="(max-width: 768px) 128px, 144px"
             className="object-contain object-left"
             priority
           />

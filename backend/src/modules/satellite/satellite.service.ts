@@ -35,16 +35,24 @@ export class SatelliteService {
   }
 
   private async fetchSignals(lat: number, lon: number) {
-    const clientId = process.env.SENTINEL_HUB_CLIENT_ID;
     const firmsKey = process.env.NASA_FIRMS_KEY;
-    if (!clientId && !firmsKey) {
-      this.logger.warn('No satellite API keys; returning null signals (fallback only).');
+    if (!firmsKey) {
+      this.logger.warn('No NASA_FIRMS_KEY; satellite signals unavailable (fallback only).');
       return {};
     }
     try {
-      return {};
+      const url = `https://firms.modaps.eosdis.nasa.gov/api/area/csv/${firmsKey}/VIIRS_SNPP_NRT/world/1/${lat}/${lon}/1`;
+      const res = await fetch(url);
+      if (!res.ok) return {};
+      const text = await res.text();
+      const lines = text.trim().split('\n').slice(1);
+      if (lines.length === 0) return {};
+      const last = lines[lines.length - 1].split(',');
+      return {
+        thermal: parseFloat(last[8] || '0'),
+      };
     } catch (e) {
-      this.logger.error(`Satellite fetch failed: ${e.message}`);
+      this.logger.warn(`Satellite fetch failed: ${e.message}`);
       return {};
     }
   }

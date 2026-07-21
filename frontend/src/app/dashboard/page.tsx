@@ -110,7 +110,7 @@ function DashboardPageContent() {
       <div className="flex h-[70vh] items-center justify-center text-zinc-400 bg-zinc-950/20 rounded-2xl border border-zinc-900">
         <div className="flex flex-col items-center gap-4">
           <div className="relative h-12 w-24 opacity-60 animate-pulse">
-            <Image src="/assets/logo/aeris-logo.png" alt="AERIS Logo" fill className="object-contain" priority />
+            <Image src="/assets/logo/aeris-logo.png" alt="AERIS Logo" fill sizes="96px" className="object-contain" priority />
           </div>
           <span className="text-xs font-semibold tracking-wider uppercase text-emerald-500">Initializing Command Center...</span>
         </div>
@@ -571,7 +571,7 @@ function DashboardPageContent() {
             {cityHotspots.length === 0 && (
               <div className="flex flex-col items-center justify-center p-8 text-center border border-dashed border-zinc-900 rounded-xl bg-zinc-900/10">
                 <div className="relative h-8 w-16 mb-3 opacity-20 grayscale">
-                  <Image src="/assets/logo/aeris-logo.png" alt="AERIS Logo" fill className="object-contain" />
+                  <Image src="/assets/logo/aeris-logo.png" alt="AERIS Logo" fill sizes="64px" className="object-contain" />
                 </div>
                 <span className="text-xs text-zinc-500 italic">No active hotspots detected in this airshed.</span>
               </div>
@@ -589,7 +589,7 @@ export default function DashboardPage() {
       <div className="flex h-[50vh] items-center justify-center text-zinc-400">
         <div className="flex flex-col items-center gap-4">
           <div className="relative h-16 w-32 opacity-60 animate-pulse">
-            <Image src="/assets/logo/aeris-logo.png" alt="AERIS Logo" fill className="object-contain" priority />
+            <Image src="/assets/logo/aeris-logo.png" alt="AERIS Logo" fill sizes="128px" className="object-contain" priority />
           </div>
           <span className="text-sm font-bold tracking-widest uppercase text-emerald-500">Loading Command Center...</span>
         </div>

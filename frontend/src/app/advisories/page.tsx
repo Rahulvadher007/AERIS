@@ -6,7 +6,7 @@ import { AdvisoryCard } from '@/components/AdvisoryCard';
 export default function AdvisoriesPage() {
   const { data, isLoading } = useQuery({
     queryKey: ['advisories'],
-    queryFn: () => api.get<{ citizenAdvisories: any[] }>('/agents/coordinate'),
+    queryFn: () => api.post<{ citizenAdvisories: any[] }>('/agents/coordinate'),
   });
   if (isLoading) return <div className="p-10 text-zinc-400">Generating advisories…</div>;
   const advisories = (data?.citizenAdvisories) || [];

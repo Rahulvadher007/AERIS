@@ -73,17 +73,23 @@ export class CoordinatorAgent {
         trafficMap[t.roadId] = t.congestionScore;
       });
 
+      const stations = await this.prisma.station.findMany();
+
       const windSpeedMap: Record<string, number> = {};
+      const cityWindSpeeds: Record<string, number[]> = {};
       const avgCityAqi: Record<string, number> = {};
       const avgCityForecast: Record<string, number> = {};
 
       validatedWeather.forEach(w => {
-        // Map station wind speed to city
-        const station = rawWeatherReadings.find(r => r.id === w.id);
+        const station = stations.find(s => s.id === w.stationId);
         if (station) {
-          windSpeedMap[w.stationId] = w.windSpeed;
+          if (!cityWindSpeeds[station.city]) cityWindSpeeds[station.city] = [];
+          cityWindSpeeds[station.city].push(w.windSpeed);
         }
       });
+      for (const [city, speeds] of Object.entries(cityWindSpeeds)) {
+        windSpeedMap[city] = speeds.reduce((a, b) => a + b, 0) / speeds.length;
+      }
 
       const attributions = await this.sourceAttributionAgent.attributeSources(zones, trafficMap, windSpeedMap);
 
@@ -95,7 +101,6 @@ export class CoordinatorAgent {
       const cityStationsList: Record<string, number[]> = {};
       const cityForecastsList: Record<string, number[]> = {};
 
-      const stations = await this.prisma.station.findMany();
       validatedAqi.forEach(a => {
         const station = stations.find(s => s.id === a.stationId);
         if (station) {

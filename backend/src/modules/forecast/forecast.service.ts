@@ -4,7 +4,7 @@ import { StationsService } from '../stations/stations.service';
 
 @Injectable()
 export class ForecastService {
-  private mlServiceUrl = 'http://127.0.0.1:8000';
+  private mlServiceUrl = process.env.ML_SERVICE_URL || 'http://127.0.0.1:8000';
 
   constructor(
     private readonly repository: ForecastRepository,

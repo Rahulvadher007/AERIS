@@ -18,6 +18,7 @@ export default function Loading() {
             src="/assets/logo/aeris-logo.png"
             alt="AERIS - Air Environmental Response & Intelligence System"
             fill
+            sizes="192px"
             className="object-contain"
             priority
           />

@@ -16,7 +16,19 @@
 **/__pycache__/
 **/*.pyc
 
-# Logs
+# Logs & errors
 *.log
+*.err
 
-backend/ml-service/data/master_dataset.csv
+# Tooling & generated artifacts
+.superpowers/
+graphify-out/
+docs/superpowers/plans/
+
+# ML service
+backend/ml-service/data/
+
+# Duplicate root-level assets
+/frontend/video.mp4
+/frontend/ChatGPT Image*.png
+/backend/forecast_loaded*.png

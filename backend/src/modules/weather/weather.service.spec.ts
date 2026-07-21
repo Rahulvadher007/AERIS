@@ -48,7 +48,7 @@ describe('WeatherService', () => {
         },
       ]);
 
-      const result = await service.getLatest();
+      const result = await service.getLive();
       const first = result[0] as any;
       expect(first.latestWeather.temperatureCategory).toBeDefined();
       expect(first.latestWeather.humidityCategory).toBeDefined();

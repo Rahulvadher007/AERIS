@@ -29,6 +29,7 @@ export default function Error({
             src="/assets/logo/aeris-logo.png"
             alt="AERIS Logo"
             fill
+            sizes="128px"
             className="object-contain opacity-50 grayscale"
             priority
           />

@@ -119,6 +119,7 @@ export default function Home() {
             src="/assets/logo/aeris-logo.png"
             alt="AERIS - Air Environmental Response & Intelligence System"
             fill
+            sizes="(max-width: 768px) 256px, 384px"
             className="object-contain"
             priority
           />
@@ -281,6 +282,7 @@ export default function Home() {
                 src="/assets/logo/aeris-logo.png"
                 alt="AERIS Logo"
                 fill
+                sizes="128px"
                 className="object-contain object-center md:object-left"
               />
             </div>

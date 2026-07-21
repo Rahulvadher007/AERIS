@@ -447,11 +447,11 @@ async function main() {
   // Time metrics
   const now = new Date();
   const startTime = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000); // 30 days ago
-  const intervalMs = (30 * 24 * 60 * 60 * 1000) / 1000;
+  const intervalMs = (30 * 24 * 60 * 60 * 1000) / 48;
 
   console.log('Starting parallel-batched readings seeding (Chunk size = 3 stations, 6 concurrent workers)...');
 
-  const batchSize = 3;
+  const batchSize = 10;
   const batches: any[][] = [];
   for (let i = 0; i < stationsToInsert.length; i += batchSize) {
     batches.push(stationsToInsert.slice(i, i + batchSize));
@@ -479,7 +479,7 @@ async function main() {
         const [,, region, , , size, aqiBase, tempBase, humBase, windBase, rainBase] = cityData;
 
         let lastObservedAqi = aqiBase;
-        for (let step = 0; step < 1000; step++) {
+        for (let step = 0; step < 48; step++) {
           const timestamp = new Date(startTime.getTime() + step * intervalMs);
           const hour = timestamp.getHours();
           const isRushHour = (hour >= 7 && hour <= 10) || (hour >= 17 && hour <= 21);
@@ -611,7 +611,7 @@ async function main() {
     }
   }
 
-  const numWorkers = 6;
+  const numWorkers = 3;
   const workerPromises = Array.from({ length: numWorkers }, () => worker());
   await Promise.all(workerPromises);
 

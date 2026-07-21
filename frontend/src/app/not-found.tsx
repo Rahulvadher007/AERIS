@@ -19,6 +19,7 @@ export default function NotFound() {
             src="/assets/logo/aeris-logo.png"
             alt="AERIS Logo"
             fill
+            sizes="160px"
             className="object-contain"
             priority
           />
