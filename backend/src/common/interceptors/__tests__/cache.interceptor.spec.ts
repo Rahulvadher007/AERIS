@@ -64,4 +64,29 @@ describe('CacheInterceptor', () => {
       }
     });
   });
+
+  it('should open circuit after 3 consecutive Redis failures and skip cache', (done) => {
+    mockCacheManager.get.mockRejectedValue(new Error('Redis down'));
+
+    const callAndObserve = (callback: () => void) => {
+      interceptor.intercept(mockContext, mockCallHandler).subscribe({
+        next: () => callback(),
+        error: () => callback(),
+      });
+    };
+
+    callAndObserve(() => {
+      callAndObserve(() => {
+        callAndObserve(() => {
+          mockCacheManager.get.mockClear();
+          interceptor.intercept(mockContext, mockCallHandler).subscribe({
+            next: () => {
+              expect(mockCacheManager.get).not.toHaveBeenCalled();
+              done();
+            }
+          });
+        });
+      });
+    });
+  });
 });

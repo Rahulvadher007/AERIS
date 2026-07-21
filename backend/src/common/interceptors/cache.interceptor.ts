@@ -1,6 +1,6 @@
 import { Injectable, Inject, ExecutionContext, CallHandler, Logger } from '@nestjs/common';
-import { Observable, of } from 'rxjs';
-import { tap, catchError } from 'rxjs/operators';
+import { Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 
 const CIRCUIT_BREAKER_THRESHOLD = 3;
@@ -41,15 +41,12 @@ export class CacheInterceptor {
         this.logger.log(`Cache MISS: ${cacheKey}`);
         next.handle().pipe(
           tap((response) => {
-            this.cacheManager.set(cacheKey, response, ttl).catch((err) => {
+            this.cacheManager.set(cacheKey, response, ttl).then(() => {
+              this.consecutiveFailures = 0;
+            }).catch((err) => {
               this.recordFailure(cacheKey, err);
             });
-            this.consecutiveFailures = 0;
           }),
-          catchError((err) => {
-            this.recordFailure(cacheKey, err);
-            throw err;
-          })
         ).subscribe({
           next: (data) => { observer.next(data); observer.complete(); },
           error: (err) => { observer.error(err); },
