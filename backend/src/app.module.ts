@@ -20,11 +20,13 @@ import { VulnerabilityModule } from './modules/vulnerability/vulnerability.modul
 import { EvidenceModule } from './modules/evidence/evidence.module';
 import { AgentsModule } from './agents/agents.module';
 import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware';
+import { MetricsModule } from './common/metrics/metrics.module';
 
 @Module({
   imports: [
     ScheduleModule.forRoot(),
     CacheModule,
+    MetricsModule,
     DatabaseModule,
     StationsModule,
     AqiModule,
