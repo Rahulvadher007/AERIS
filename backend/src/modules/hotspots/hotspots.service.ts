@@ -99,12 +99,23 @@ export class HotspotsService implements OnModuleInit {
     await this.repository.createMany(hotspotsToInsert);
   }
 
-  async getHotspots(city?: string) {
-    return this.repository.findAll(city);
+  async getHotspots(city?: string, page = 1, limit = 50) {
+    const skip = (page - 1) * limit;
+    const result = await this.repository.findAll(city, skip, limit);
+    return {
+      data: result.data,
+      meta: {
+        total: result.total,
+        page,
+        limit,
+        totalPages: Math.ceil(result.total / limit),
+      },
+    };
   }
 
   async getLatestHotspots(city?: string) {
-    return this.repository.findAll(city);
+    const result = await this.repository.findAll(city, 0, 200);
+    return result.data;
   }
 
   async getHotspotById(id: string) {

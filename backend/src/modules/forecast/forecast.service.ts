@@ -14,7 +14,7 @@ export class ForecastService {
   async generateForecast(stationCode: string, horizon: string) {
     // 1. Validate station
     const stations = await this.stationsService.findAll();
-    const station = stations.find(s => s.stationCode === stationCode);
+    const station = stations.data.find(s => s.stationCode === stationCode);
     if (!station) {
       throw new NotFoundException(`Station ${stationCode} not found`);
     }

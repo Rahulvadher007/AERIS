@@ -27,7 +27,10 @@ export class TrafficController {
   @ApiQuery({ name: 'limit', required: false })
   async getHistory(@Query() query: any) {
     return this.trafficService.getHistory({
-      ...query,
+      roadSegment: query.roadSegment,
+      zoneId: query.zoneId,
+      startDate: query.startDate,
+      endDate: query.endDate,
       page: query.page ? parseInt(query.page) : 1,
       limit: query.limit ? parseInt(query.limit) : 50,
     });

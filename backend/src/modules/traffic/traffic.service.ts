@@ -12,7 +12,17 @@ export class TrafficService {
   }
 
   async getHistory(filters: any) {
-    return this.repository.getTrafficHistory(filters);
+    const { page = 1, limit = 50 } = filters;
+    const result = await this.repository.getTrafficHistory(filters);
+    return {
+      data: result.data,
+      meta: {
+        total: result.total,
+        page,
+        limit,
+        totalPages: Math.ceil(result.total / limit),
+      },
+    };
   }
 
   async getLatestTraffic(city?: string) {

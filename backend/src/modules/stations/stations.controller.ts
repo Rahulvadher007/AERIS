@@ -2,6 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestj
 import { StationsService } from './stations.service';
 import { CreateStationDto } from './dto/create-station.dto';
 import { UpdateStationDto } from './dto/update-station.dto';
+import { OffsetPaginationDto } from '../../common/dto/pagination.dto';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 
 @ApiTags('Stations')
@@ -23,8 +24,11 @@ export class StationsController {
 
   @Get()
   @ApiOperation({ summary: 'Get all stations' })
-  findAll(@Query('city') city?: string) {
-    return this.stationsService.findAll(city);
+  findAll(
+    @Query('city') city?: string,
+    @Query() pagination?: OffsetPaginationDto,
+  ) {
+    return this.stationsService.findAll(city, pagination?.page, pagination?.limit);
   }
 
   @Get(':id')

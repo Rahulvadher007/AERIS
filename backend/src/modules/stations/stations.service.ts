@@ -11,8 +11,18 @@ export class StationsService {
     return this.repository.create(createStationDto);
   }
 
-  async findAll(city?: string) {
-    return this.repository.findAll(city);
+  async findAll(city?: string, page = 1, limit = 50) {
+    const skip = (page - 1) * limit;
+    const result = await this.repository.findAll(city, skip, limit);
+    return {
+      data: result.data,
+      meta: {
+        total: result.total,
+        page,
+        limit,
+        totalPages: Math.ceil(result.total / limit),
+      },
+    };
   }
 
   async findUniqueCities() {

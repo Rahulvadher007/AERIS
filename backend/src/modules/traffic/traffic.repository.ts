@@ -19,13 +19,17 @@ export class TrafficRepository {
       where.timestamp = { gte: new Date(startDate), lte: new Date(endDate) };
     }
 
-    return this.prisma.trafficData.findMany({
-      where,
-      skip: (page - 1) * limit,
-      take: limit,
-      include: { road: true },
-      orderBy: { timestamp: 'desc' },
-    });
+    const [data, total] = await Promise.all([
+      this.prisma.trafficData.findMany({
+        where,
+        skip: (page - 1) * limit,
+        take: limit,
+        include: { road: true },
+        orderBy: { timestamp: 'desc' },
+      }),
+      this.prisma.trafficData.count({ where }),
+    ]);
+    return { data, total };
   }
 
   async getLatestTraffic(city?: string) {

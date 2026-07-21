@@ -1,5 +1,6 @@
 import { Controller, Get, Post, Param, Query } from '@nestjs/common';
 import { HotspotsService } from './hotspots.service';
+import { OffsetPaginationDto } from '../../common/dto/pagination.dto';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 
 @ApiTags('Hotspots')
@@ -16,8 +17,11 @@ export class HotspotsController {
 
   @Get()
   @ApiOperation({ summary: 'Get all active hotspots' })
-  getAll(@Query('city') city?: string) {
-    return this.hotspotsService.getHotspots(city);
+  getAll(
+    @Query('city') city?: string,
+    @Query() pagination?: OffsetPaginationDto,
+  ) {
+    return this.hotspotsService.getHotspots(city, pagination?.page, pagination?.limit);
   }
 
   @Get('latest')

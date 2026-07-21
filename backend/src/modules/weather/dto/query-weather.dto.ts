@@ -1,8 +1,8 @@
-import { IsString, IsOptional, IsDateString, IsInt, Min } from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsString, IsOptional, IsDateString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { OffsetPaginationDto } from '../../../common/dto/pagination.dto';
 
-export class QueryWeatherDto {
+export class QueryWeatherDto extends OffsetPaginationDto {
   @ApiProperty({ required: false })
   @IsString()
   @IsOptional()
@@ -22,18 +22,4 @@ export class QueryWeatherDto {
   @IsDateString()
   @IsOptional()
   endDate?: string;
-
-  @ApiProperty({ default: 1, required: false })
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  @IsOptional()
-  page?: number = 1;
-
-  @ApiProperty({ default: 50, required: false })
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  @IsOptional()
-  limit?: number = 50;
 }
