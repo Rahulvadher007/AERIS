@@ -82,7 +82,7 @@ model WeatherData {
   @@index([temperature])
   @@index([humidity])
   @@index([windSpeed])
-  @@index([stationId, timestamp])
+  @@index([stationId, timestamp(sort: Desc)])
   @@map("weather_data")
 }
 
@@ -105,7 +105,7 @@ model AqiReading {
   @@index([stationId])
   @@index([timestamp])
   @@index([aqi])
-  @@index([stationId, timestamp])
+  @@index([stationId, timestamp(sort: Desc)])
   @@map("aqi_readings")
 }
 
