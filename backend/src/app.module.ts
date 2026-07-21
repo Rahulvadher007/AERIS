@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -19,6 +19,7 @@ import { LandUseModule } from './modules/landuse/landuse.module';
 import { VulnerabilityModule } from './modules/vulnerability/vulnerability.module';
 import { EvidenceModule } from './modules/evidence/evidence.module';
 import { AgentsModule } from './agents/agents.module';
+import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware';
 
 @Module({
   imports: [
@@ -44,4 +45,8 @@ import { AgentsModule } from './agents/agents.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(CorrelationIdMiddleware).forRoutes('*');
+  }
+}
