@@ -1,48 +1,17 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useQuery } from '@tanstack/react-query';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { Shield, Activity, Map, TrendingUp, AlertTriangle, Lightbulb, ArrowDown } from 'lucide-react';
+import { AnimatedCounter } from '@/components/AnimatedCounter.client';
 import { stationService } from '@/services/station.service';
 import { aqiService } from '@/services/aqi.service';
 import { hotspotService } from '@/services/hotspot.service';
 import { weatherService } from '@/services/weather.service';
 import { trafficService } from '@/services/traffic.service';
-
-// High-performance smooth count-up component using requestAnimationFrame
-function AnimatedCounter({ value, duration = 1.5, suffix = "" }: { value: number; duration?: number; suffix?: string }) {
-  const [count, setCount] = useState(0);
-
-  useEffect(() => {
-    let startTime: number | null = null;
-    const end = value;
-
-    const animate = (timestamp: number) => {
-      if (!startTime) startTime = timestamp;
-      const progress = (timestamp - startTime) / (duration * 1000);
-
-      if (progress < 1) {
-        setCount(Math.floor(end * progress));
-        requestAnimationFrame(animate);
-      } else {
-        setCount(end);
-      }
-    };
-
-    const animFrame = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(animFrame);
-  }, [value, duration]);
-
-  return (
-    <span>
-      {count.toLocaleString()}
-      {suffix}
-    </span>
-  );
-}
 
 export default function Home() {
   const overviewRef = useRef<HTMLDivElement>(null);
