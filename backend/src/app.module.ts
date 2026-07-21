@@ -3,6 +3,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DatabaseModule } from './database/database.module';
+import { CacheModule } from './common/cache/cache.module';
 import { StationsModule } from './modules/stations/stations.module';
 import { AqiModule } from './modules/aqi/aqi.module';
 import { ForecastModule } from './modules/forecast/forecast.module';
@@ -22,6 +23,7 @@ import { AgentsModule } from './agents/agents.module';
 @Module({
   imports: [
     ScheduleModule.forRoot(),
+    CacheModule,
     DatabaseModule,
     StationsModule,
     AqiModule,
