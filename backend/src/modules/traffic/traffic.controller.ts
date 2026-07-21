@@ -2,6 +2,7 @@ import { Controller, Get, Post, Query, Body, Param } from '@nestjs/common';
 import { TrafficService } from './traffic.service';
 import { TrafficAQICorrelationService } from './traffic-aqi.service';
 import { ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import { OffsetPaginationDto } from '../../common/dto/pagination.dto';
 
 @ApiTags('Traffic Intelligence')
 @Controller('traffic')
@@ -25,14 +26,20 @@ export class TrafficController {
   @ApiQuery({ name: 'endDate', required: false })
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })
-  async getHistory(@Query() query: any) {
+  async getHistory(
+    @Query() pagination: OffsetPaginationDto,
+    @Query('roadSegment') roadSegment?: string,
+    @Query('zoneId') zoneId?: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
     return this.trafficService.getHistory({
-      roadSegment: query.roadSegment,
-      zoneId: query.zoneId,
-      startDate: query.startDate,
-      endDate: query.endDate,
-      page: query.page ? parseInt(query.page) : 1,
-      limit: query.limit ? parseInt(query.limit) : 50,
+      roadSegment,
+      zoneId,
+      startDate,
+      endDate,
+      page: pagination.page ?? 1,
+      limit: pagination.limit ?? 50,
     });
   }
 
