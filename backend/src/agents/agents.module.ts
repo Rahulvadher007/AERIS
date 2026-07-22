@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { HttpModule } from '@nestjs/axios';
 import { DatabaseModule } from '../database/database.module';
 import { ForecastModule } from '../modules/forecast/forecast.module';
 import { HotspotsModule } from '../modules/hotspots/hotspots.module';
@@ -22,6 +23,7 @@ import { AgentsController } from './agents.controller';
   imports: [
     DatabaseModule,
     ForecastModule,
+    HttpModule.register({ timeout: 120000 }),
     HotspotsModule,
     InterventionsModule,
     SatelliteModule,

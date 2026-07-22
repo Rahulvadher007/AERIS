@@ -96,6 +96,20 @@ export class ForecastService {
   async getForecast48h(stationCode: string) { return this.generateForecast(stationCode, '48h'); }
   async getForecast72h(stationCode: string) { return this.generateForecast(stationCode, '72h'); }
 
+  async saveForecastResult(stationId: string, result: any, horizon: string) {
+    const hoursAhead = parseInt(horizon.replace('h', ''));
+    await this.repository.saveForecast({
+      stationId,
+      forecastAQI: result.forecastAQI,
+      confidence: result.confidence,
+      hoursAhead,
+      category: result.category,
+      riskLevel: result.riskLevel,
+      forecastType: horizon,
+      modelVersion: 'v1.0',
+    });
+  }
+
   async triggerRetraining() {
     try {
       const { data } = await lastValueFrom(
