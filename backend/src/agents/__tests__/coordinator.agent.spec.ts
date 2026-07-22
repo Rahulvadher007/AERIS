@@ -9,6 +9,7 @@ import { SourceAttributionAgent } from '../source-attribution.agent';
 import { InterventionAgent } from '../intervention.agent';
 import { CitizenAdvisoryAgent } from '../citizen-advisory.agent';
 import { PrismaService } from '../../database/prisma.service';
+import { PrometheusService } from '../../common/metrics/prometheus.service';
 
 describe('CoordinatorAgent', () => {
   let coordinator: CoordinatorAgent;
@@ -27,35 +28,75 @@ describe('CoordinatorAgent', () => {
         CoordinatorAgent,
         {
           provide: AQIAgent,
-          useValue: { processReadings: jest.fn().mockResolvedValue([{ id: '1', aqi: 50, stationId: 's1' }]) }
+          useValue: {
+            processReadings: jest
+              .fn()
+              .mockResolvedValue([{ id: '1', aqi: 50, stationId: 's1' }]),
+          },
         },
         {
           provide: WeatherAgent,
-          useValue: { processWeather: jest.fn().mockResolvedValue([{ id: '1', windSpeed: 3.0, stationId: 's1' }]) }
+          useValue: {
+            processWeather: jest
+              .fn()
+              .mockResolvedValue([
+                { id: '1', windSpeed: 3.0, stationId: 's1' },
+              ]),
+          },
         },
         {
           provide: TrafficAgent,
-          useValue: { processTraffic: jest.fn().mockResolvedValue([{ id: '1', congestionScore: 40, roadId: 'r1' }]) }
+          useValue: {
+            processTraffic: jest
+              .fn()
+              .mockResolvedValue([
+                { id: '1', congestionScore: 40, roadId: 'r1' },
+              ]),
+          },
         },
         {
           provide: ForecastAgent,
-          useValue: { executeForecasts: jest.fn().mockResolvedValue([{ id: '1', stationCode: 'DEL001', forecasts: { '24h': { forecastAQI: 55 } } }]) }
+          useValue: {
+            executeForecasts: jest.fn().mockResolvedValue([
+              {
+                id: '1',
+                stationCode: 'DEL001',
+                forecasts: { '24h': { forecastAQI: 55 } },
+              },
+            ]),
+          },
         },
         {
           provide: HotspotAgent,
-          useValue: { detectHotspots: jest.fn().mockResolvedValue([{ id: '1', severity: 'HIGH', aqi: 150 }]) }
+          useValue: {
+            detectHotspots: jest
+              .fn()
+              .mockResolvedValue([{ id: '1', severity: 'HIGH', aqi: 150 }]),
+          },
         },
         {
           provide: SourceAttributionAgent,
-          useValue: { attributeSources: jest.fn().mockResolvedValue([{ source: 'traffic', contribution: 40 }]) }
+          useValue: {
+            attributeSources: jest
+              .fn()
+              .mockResolvedValue([{ source: 'traffic', contribution: 40 }]),
+          },
         },
         {
           provide: InterventionAgent,
-          useValue: { planInterventions: jest.fn().mockResolvedValue([{ id: '1', title: 'Test' }]) }
+          useValue: {
+            planInterventions: jest
+              .fn()
+              .mockResolvedValue([{ id: '1', title: 'Test' }]),
+          },
         },
         {
           provide: CitizenAdvisoryAgent,
-          useValue: { generateAdvisories: jest.fn().mockResolvedValue([{ id: '1', message: 'Test' }]) }
+          useValue: {
+            generateAdvisories: jest
+              .fn()
+              .mockResolvedValue([{ id: '1', message: 'Test' }]),
+          },
         },
         {
           provide: PrismaService,
@@ -65,8 +106,15 @@ describe('CoordinatorAgent', () => {
             trafficData: { findMany: jest.fn().mockResolvedValue([]) },
             zone: { findMany: jest.fn().mockResolvedValue([]) },
             station: { findMany: jest.fn().mockResolvedValue([]) },
-          }
-        }
+          },
+        },
+        {
+          provide: PrometheusService,
+          useValue: {
+            observeAgentSweep: jest.fn(),
+            observeAgentStep: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -76,9 +124,12 @@ describe('CoordinatorAgent', () => {
     trafficAgent = module.get<TrafficAgent>(TrafficAgent);
     forecastAgent = module.get<ForecastAgent>(ForecastAgent);
     hotspotAgent = module.get<HotspotAgent>(HotspotAgent);
-    sourceAttributionAgent = module.get<SourceAttributionAgent>(SourceAttributionAgent);
+    sourceAttributionAgent = module.get<SourceAttributionAgent>(
+      SourceAttributionAgent,
+    );
     interventionAgent = module.get<InterventionAgent>(InterventionAgent);
-    citizenAdvisoryAgent = module.get<CitizenAdvisoryAgent>(CitizenAdvisoryAgent);
+    citizenAdvisoryAgent =
+      module.get<CitizenAdvisoryAgent>(CitizenAdvisoryAgent);
   });
 
   it('should call all agents and return summary', async () => {
@@ -101,7 +152,11 @@ describe('CoordinatorAgent', () => {
   });
 
   it('should handle agent failure gracefully', async () => {
-    jest.spyOn(aqiAgent, 'processReadings').mockRejectedValue(new Error('AQI agent failed'));
-    await expect(coordinator.coordinateSweep()).rejects.toThrow('AQI agent failed');
+    jest
+      .spyOn(aqiAgent, 'processReadings')
+      .mockRejectedValue(new Error('AQI agent failed'));
+    await expect(coordinator.coordinateSweep()).rejects.toThrow(
+      'AQI agent failed',
+    );
   });
 });

@@ -5,7 +5,9 @@ import { PrismaService } from '../database/prisma.service';
 
 describe('CitizenAdvisoryAgent', () => {
   let agent: CitizenAdvisoryAgent;
-  const vulnMock = { computeScore: jest.fn().mockResolvedValue({ score: 0.7, poiCounts: {} }) };
+  const vulnMock = {
+    computeScore: jest.fn().mockResolvedValue({ score: 0.7, poiCounts: {} }),
+  };
   const prismaMock = { advisory: { create: jest.fn().mockResolvedValue({}) } };
 
   beforeEach(async () => {
@@ -21,7 +23,11 @@ describe('CitizenAdvisoryAgent', () => {
 
   it('selects Tamil for Chennai and includes vulnerability score', async () => {
     const zones = [{ id: 'z1', zoneName: 'T Nagar', city: 'Chennai' }];
-    const out = await agent.generateAdvisories(zones as any, { Chennai: 180 }, { Chennai: 220 });
+    const out = await agent.generateAdvisories(
+      zones as any,
+      { Chennai: 180 },
+      { Chennai: 220 },
+    );
     expect(out[0].language).toBe('ta');
     expect(out[0].vulnerabilityScore).toBe(0.7);
     expect(out[0].message.length).toBeGreaterThan(0);

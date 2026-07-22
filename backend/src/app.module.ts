@@ -1,4 +1,5 @@
 import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -20,10 +21,12 @@ import { VulnerabilityModule } from './modules/vulnerability/vulnerability.modul
 import { EvidenceModule } from './modules/evidence/evidence.module';
 import { AgentsModule } from './agents/agents.module';
 import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware';
+import { RateLimiterMiddleware } from './common/middleware/rate-limiter.middleware';
 import { MetricsModule } from './common/metrics/metrics.module';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
     ScheduleModule.forRoot(),
     CacheModule,
     MetricsModule,
@@ -50,5 +53,6 @@ import { MetricsModule } from './common/metrics/metrics.module';
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(CorrelationIdMiddleware).forRoutes('*');
+    consumer.apply(RateLimiterMiddleware).forRoutes('*');
   }
 }

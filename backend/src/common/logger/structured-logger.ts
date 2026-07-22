@@ -37,7 +37,19 @@ export class StructuredLogger implements LoggerService {
     this.emit('debug', message, meta);
   }
 
-  private emit(level: LogEntry['level'], message: string, meta?: Record<string, unknown>) {
+  verbose(message: string, meta?: Record<string, unknown>) {
+    this.emit('debug', message, meta);
+  }
+
+  setContext(context: string) {
+    this.context = context;
+  }
+
+  private emit(
+    level: LogEntry['level'],
+    message: string,
+    meta?: Record<string, unknown>,
+  ) {
     const entry: LogEntry = {
       timestamp: new Date().toISOString(),
       level,

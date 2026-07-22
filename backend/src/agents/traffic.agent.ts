@@ -8,9 +8,11 @@ export class TrafficAgent {
    * Analyzes traffic records and correlates congestion with emission impacts.
    */
   async processTraffic(trafficReadings: any[]): Promise<any[]> {
-    this.logger.log(`Traffic Agent: Analyzing ${trafficReadings.length} traffic segment records...`);
+    this.logger.log(
+      `Traffic Agent: Analyzing ${trafficReadings.length} traffic segment records...`,
+    );
 
-    return trafficReadings.map(t => {
+    return trafficReadings.map((t) => {
       // Congestion score (0-100) maps directly to traffic AQI contribution
       const aqiContribution = this.estimateAqiContribution(t.congestionScore);
       const level = this.getCongestionLevel(t.congestionScore);

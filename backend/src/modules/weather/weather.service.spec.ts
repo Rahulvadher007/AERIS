@@ -59,7 +59,9 @@ describe('WeatherService', () => {
   describe('getStationHistory', () => {
     it('should throw NotFoundException if no data', async () => {
       mockWeatherRepository.getStationHistory.mockResolvedValue([]);
-      await expect(service.getStationHistory('invalid')).rejects.toThrow('No weather data found');
+      await expect(service.getStationHistory('invalid')).rejects.toThrow(
+        'No weather data found',
+      );
     });
   });
 });

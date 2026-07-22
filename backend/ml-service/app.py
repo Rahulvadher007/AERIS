@@ -18,14 +18,16 @@ logger = logging.getLogger(__name__)
 MODELS: dict[str, dict[str, object]] = {}
 prediction_cache = TTLCache(maxsize=2048, ttl=3600)
 
+ALLOWED_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:3001").split(",")
+
 app = FastAPI(title="Urban AI - ML Forecasting API", version="1.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # In production, restrict this to the backend domain
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type"],
 )
 
 class PredictRequest(BaseModel):
@@ -245,13 +247,6 @@ def predict_horizon(horizon: str, features: Dict[str, float]):
         "riskLevel": risk_level
     }
 
-@app.post("/predict/{horizon}")
-async def predict(horizon: str, req: PredictRequest):
-    if horizon not in ['24h', '48h', '72h']:
-        raise HTTPException(status_code=400, detail="Horizon must be 24h, 48h, or 72h")
-    
-    return predict_horizon(horizon, req.features)
-
 @app.post("/predict/batch")
 async def predict_batch(req: BatchPredictRequest, horizon: str = "24h"):
     if horizon not in ['24h', '48h', '72h']:
@@ -284,6 +279,13 @@ async def predict_batch(req: BatchPredictRequest, horizon: str = "24h"):
         conn.close()
 
     return {"results": results}
+
+@app.post("/predict/{horizon}")
+async def predict(horizon: str, req: PredictRequest):
+    if horizon not in ['24h', '48h', '72h']:
+        raise HTTPException(status_code=400, detail="Horizon must be 24h, 48h, or 72h")
+    
+    return predict_horizon(horizon, req.features)
 
 @app.post("/ml/train")
 async def train(background_tasks: BackgroundTasks):

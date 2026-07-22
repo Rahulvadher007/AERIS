@@ -9,7 +9,7 @@ import { OffsetPaginationDto } from '../../common/dto/pagination.dto';
 export class TrafficController {
   constructor(
     private readonly trafficService: TrafficService,
-    private readonly correlationService: TrafficAQICorrelationService
+    private readonly correlationService: TrafficAQICorrelationService,
   ) {}
 
   @Post()
@@ -68,8 +68,13 @@ export class TrafficController {
   }
 
   @Get('correlate/:roadId')
-  @ApiOperation({ summary: 'Correlate traffic congestion on a road to AQI impacts' })
-  async correlateTrafficAQI(@Param('roadId') roadId: string, @Query('timestamp') timestamp: string) {
+  @ApiOperation({
+    summary: 'Correlate traffic congestion on a road to AQI impacts',
+  })
+  async correlateTrafficAQI(
+    @Param('roadId') roadId: string,
+    @Query('timestamp') timestamp: string,
+  ) {
     const time = timestamp ? new Date(timestamp) : new Date();
     return this.correlationService.correlateTrafficWithAQI(roadId, time);
   }

@@ -1,4 +1,9 @@
-import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  OnModuleInit,
+  OnModuleDestroy,
+  Logger,
+} from '@nestjs/common';
 import Redis from 'ioredis';
 
 const INVALIDATION_CHANNEL = 'cache:invalidate';
@@ -17,7 +22,9 @@ export class CacheInvalidator implements OnModuleInit, OnModuleDestroy {
       lazyConnect: true,
     });
     this.publisher.connect().catch((err) => {
-      this.logger.warn(`Cache invalidator Redis connection failed: ${err.message}. Writes will skip invalidation.`);
+      this.logger.warn(
+        `Cache invalidator Redis connection failed: ${err.message}. Writes will skip invalidation.`,
+      );
     });
   }
 
@@ -37,7 +44,9 @@ export class CacheInvalidator implements OnModuleInit, OnModuleDestroy {
       await this.publisher.publish(INVALIDATION_CHANNEL, message);
       this.logger.log(`Published invalidation for pattern: ${pattern}`);
     } catch (err: any) {
-      this.logger.warn(`Failed to publish invalidation for ${pattern}: ${err.message}`);
+      this.logger.warn(
+        `Failed to publish invalidation for ${pattern}: ${err.message}`,
+      );
     }
   }
 }

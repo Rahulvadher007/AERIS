@@ -9,12 +9,19 @@ describe('EvidenceService', () => {
     aqiReading: { findMany: jest.fn().mockResolvedValue([]) },
     hotspot: { findMany: jest.fn().mockResolvedValue([]) },
     intervention: { findMany: jest.fn().mockResolvedValue([]) },
-    station: { findMany: jest.fn().mockResolvedValue([{ city: 'Delhi' }, { city: 'Mumbai' }]) },
+    station: {
+      findMany: jest
+        .fn()
+        .mockResolvedValue([{ city: 'Delhi' }, { city: 'Mumbai' }]),
+    },
   };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [EvidenceService, { provide: PrismaService, useValue: prismaMock }],
+      providers: [
+        EvidenceService,
+        { provide: PrismaService, useValue: prismaMock },
+      ],
     }).compile();
     service = module.get(EvidenceService);
   });

@@ -28,11 +28,14 @@ export interface CursorResponse<T> {
 
 export interface Advisory {
   id: string;
+  zoneId: string;
   message: string;
-  severity: string;
-  zone?: string;
-  city?: string;
-  aqi?: number;
-  recommendations?: string[];
+  riskLevel: string;
+  city: string;
+  language?: string;
+  forecastAQI?: number;
+  recommendedActions?: string[];
+  ttsScript?: string;
+  vulnerabilityScore?: number;
   createdAt?: string;
 }

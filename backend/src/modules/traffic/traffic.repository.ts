@@ -10,7 +10,14 @@ export class TrafficRepository {
   }
 
   async getTrafficHistory(filters: any) {
-    const { roadSegment, zoneId, startDate, endDate, page = 1, limit = 50 } = filters;
+    const {
+      roadSegment,
+      zoneId,
+      startDate,
+      endDate,
+      page = 1,
+      limit = 50,
+    } = filters;
     const where: any = {};
 
     if (roadSegment) where.roadId = roadSegment;
@@ -44,13 +51,13 @@ export class TrafficRepository {
         traffic: {
           orderBy: { timestamp: 'desc' },
           take: 1,
-        }
-      }
+        },
+      },
     });
 
-    return roads.map(r => ({
+    return roads.map((r) => ({
       ...r,
-      latestTraffic: r.traffic[0] || null
+      latestTraffic: r.traffic[0] || null,
     }));
   }
 
@@ -94,15 +101,18 @@ export class TrafficRepository {
       where,
       include: {
         roads: {
-          include: { traffic: { orderBy: { timestamp: 'desc' }, take: 50 } }
-        }
-      }
+          include: { traffic: { orderBy: { timestamp: 'desc' }, take: 50 } },
+        },
+      },
     });
 
-    return zones.map(zone => {
-      let totalCong = 0, peakCong = 0, vehicles = 0, counts = 0;
-      zone.roads.forEach(r => {
-        r.traffic.forEach(t => {
+    return zones.map((zone) => {
+      let totalCong = 0,
+        peakCong = 0,
+        vehicles = 0,
+        counts = 0;
+      zone.roads.forEach((r) => {
+        r.traffic.forEach((t) => {
           totalCong += t.congestionScore;
           if (t.congestionScore > peakCong) peakCong = t.congestionScore;
           vehicles += t.vehicleCount;
@@ -121,10 +131,10 @@ export class TrafficRepository {
 
   async getTrafficForCorrelation(roadId: string, timestamp: Date) {
     const start = new Date(timestamp.getTime() - 2 * 60 * 60 * 1000); // 2 hours before
-    const end = new Date(timestamp.getTime() + 2 * 60 * 60 * 1000);   // 2 hours after
+    const end = new Date(timestamp.getTime() + 2 * 60 * 60 * 1000); // 2 hours after
     return this.prisma.trafficData.findMany({
       where: { roadId, timestamp: { gte: start, lte: end } },
-      orderBy: { timestamp: 'desc' }
+      orderBy: { timestamp: 'desc' },
     });
   }
 }

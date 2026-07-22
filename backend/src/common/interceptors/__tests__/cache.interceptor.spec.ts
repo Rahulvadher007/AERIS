@@ -38,7 +38,7 @@ describe('CacheInterceptor', () => {
         expect(result).toEqual({ data: 'cached' });
         expect(mockCacheManager.get).toHaveBeenCalled();
         done();
-      }
+      },
     });
   });
 
@@ -51,17 +51,19 @@ describe('CacheInterceptor', () => {
         expect(result).toEqual({ data: 'test-response' });
         expect(mockCacheManager.set).toHaveBeenCalled();
         done();
-      }
+      },
     });
   });
 
   it('should fall through on Redis failure (circuit breaker)', (done) => {
-    mockCacheManager.get.mockRejectedValue(new Error('Redis connection refused'));
+    mockCacheManager.get.mockRejectedValue(
+      new Error('Redis connection refused'),
+    );
     interceptor.intercept(mockContext, mockCallHandler).subscribe({
       next: (result) => {
         expect(result).toEqual({ data: 'test-response' });
         done();
-      }
+      },
     });
   });
 
@@ -83,7 +85,7 @@ describe('CacheInterceptor', () => {
             next: () => {
               expect(mockCacheManager.get).not.toHaveBeenCalled();
               done();
-            }
+            },
           });
         });
       });

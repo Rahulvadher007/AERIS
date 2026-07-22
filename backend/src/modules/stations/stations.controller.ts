@@ -1,8 +1,18 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+} from '@nestjs/common';
 import { StationsService } from './stations.service';
 import { CreateStationDto } from './dto/create-station.dto';
 import { UpdateStationDto } from './dto/update-station.dto';
 import { OffsetPaginationDto } from '../../common/dto/pagination.dto';
+import { QueryStationsDto } from './dto/query-stations.dto';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 
 @ApiTags('Stations')
@@ -25,10 +35,14 @@ export class StationsController {
   @Get()
   @ApiOperation({ summary: 'Get all stations' })
   findAll(
-    @Query('city') city?: string,
+    @Query() query: QueryStationsDto,
     @Query() pagination?: OffsetPaginationDto,
   ) {
-    return this.stationsService.findAll(city, pagination?.page, pagination?.limit);
+    return this.stationsService.findAll(
+      query.city,
+      pagination?.page,
+      pagination?.limit,
+    );
   }
 
   @Get(':id')

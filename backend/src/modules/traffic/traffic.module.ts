@@ -7,6 +7,6 @@ import { TrafficAQICorrelationService } from './traffic-aqi.service';
 @Module({
   controllers: [TrafficController],
   providers: [TrafficService, TrafficRepository, TrafficAQICorrelationService],
-  exports: [TrafficService, TrafficAQICorrelationService]
+  exports: [TrafficService, TrafficAQICorrelationService],
 })
 export class TrafficModule {}

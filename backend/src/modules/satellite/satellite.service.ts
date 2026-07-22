@@ -20,7 +20,11 @@ export class SatelliteService {
   async getNearestReading(lat: number, lon: number, maxAgeHours = 24) {
     const since = new Date(Date.now() - maxAgeHours * 3600 * 1000);
     return this.prisma.satelliteReading.findFirst({
-      where: { latitude: { gte: lat - 0.5, lte: lat + 0.5 }, longitude: { gte: lon - 0.5, lte: lon + 0.5 }, timestamp: { gte: since } },
+      where: {
+        latitude: { gte: lat - 0.5, lte: lat + 0.5 },
+        longitude: { gte: lon - 0.5, lte: lon + 0.5 },
+        timestamp: { gte: since },
+      },
       orderBy: { timestamp: 'desc' },
     });
   }
@@ -37,7 +41,9 @@ export class SatelliteService {
   private async fetchSignals(lat: number, lon: number) {
     const firmsKey = process.env.NASA_FIRMS_KEY;
     if (!firmsKey) {
-      this.logger.warn('No NASA_FIRMS_KEY; satellite signals unavailable (fallback only).');
+      this.logger.warn(
+        'No NASA_FIRMS_KEY; satellite signals unavailable (fallback only).',
+      );
       return {};
     }
     try {

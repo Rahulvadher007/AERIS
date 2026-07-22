@@ -8,11 +8,12 @@ export class InterventionRulesEngine {
     hotspotCount: number,
     windSpeed: number,
     humidity: number,
-    temperature: number
+    temperature: number,
   ): { title: string; description: string; actions: string[] } {
     const actions: string[] = [];
     let title = 'Routine Monitoring';
-    let description = 'Ambient air quality and microclimate parameters are within acceptable baselines.';
+    let description =
+      'Ambient air quality and microclimate parameters are within acceptable baselines.';
 
     // 1. Identify dominant pollution source (Source Attribution)
     const trafficWeight = trafficCongestion * 0.8;
@@ -38,46 +39,70 @@ export class InterventionRulesEngine {
     }
 
     // 2. Map actions dynamically based on thresholds and meteorological factors
-    
+
     // Stagnation / Weather actions
     if (windSpeed < 2.2) {
-      actions.push('Deploy outdoor mist canons & smog guns at major intersections');
+      actions.push(
+        'Deploy outdoor mist canons & smog guns at major intersections',
+      );
       actions.push('Activate smog towers at maximum filtration capacity');
     }
     if (humidity > 80 && temperature < 18 && aqi > 200) {
-      actions.push('Enforce strict ban on municipal solid waste and biomass burning');
+      actions.push(
+        'Enforce strict ban on municipal solid waste and biomass burning',
+      );
     }
 
     // Vehicular / Traffic actions
     if (trafficCongestion > 75) {
-      actions.push('Enforce odd-even vehicle restrictions for non-essential transit');
-      actions.push('Deploy traffic marshals to clear bottlenecks and minimize idling');
+      actions.push(
+        'Enforce odd-even vehicle restrictions for non-essential transit',
+      );
+      actions.push(
+        'Deploy traffic marshals to clear bottlenecks and minimize idling',
+      );
       actions.push('Reroute heavy commercial vehicles via outer bypass roads');
     } else if (trafficCongestion > 50) {
-      actions.push('Optimize traffic signal timings to reduce stop-and-go emissions');
+      actions.push(
+        'Optimize traffic signal timings to reduce stop-and-go emissions',
+      );
     }
 
     // Industrial / Dust / Hotspot actions
     if (hotspotCount >= 3) {
-      actions.push('Temporarily halt construction and demolition activities within 2km');
-      actions.push('Enforce mandatory dust screens and water misting at active sites');
+      actions.push(
+        'Temporarily halt construction and demolition activities within 2km',
+      );
+      actions.push(
+        'Enforce mandatory dust screens and water misting at active sites',
+      );
       actions.push('Shut down non-compliant small-scale industrial units');
     } else if (hotspotCount >= 1) {
-      actions.push('Increase frequency of mechanical road sweeping and water washing');
+      actions.push(
+        'Increase frequency of mechanical road sweeping and water washing',
+      );
     }
 
     // Pollutant-specific actions
     if (pm10 > 150) {
-      actions.push('Enforce wet-suppression on unpaved roads and construction corridors');
+      actions.push(
+        'Enforce wet-suppression on unpaved roads and construction corridors',
+      );
     }
     if (no2 > 80) {
-      actions.push('Conduct intensive on-road remote sensing of diesel exhaust emissions');
+      actions.push(
+        'Conduct intensive on-road remote sensing of diesel exhaust emissions',
+      );
     }
 
     // High AQI / Public Health advisories
     if (aqi > 300) {
-      actions.push('Issue public health advisory for vulnerable groups to remain indoors');
-      actions.push('Transition schools to online learning and restrict outdoor activities');
+      actions.push(
+        'Issue public health advisory for vulnerable groups to remain indoors',
+      );
+      actions.push(
+        'Transition schools to online learning and restrict outdoor activities',
+      );
     }
 
     // Fallback if clean

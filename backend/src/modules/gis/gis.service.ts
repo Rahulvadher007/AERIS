@@ -9,12 +9,12 @@ export class GisService {
 
   async getHeatmap() {
     const readings = await this.repository.getRecentAqiReadings();
-    
-    const features = readings.map(r => 
+
+    const features = readings.map((r) =>
       turf.point([r.longitude, r.latitude], {
         aqi: r.aqi,
         stationId: r.stationId,
-      })
+      }),
     );
 
     return turf.featureCollection(features);
@@ -25,10 +25,12 @@ export class GisService {
     const zones = await this.repository.getAllZones();
 
     const points = turf.featureCollection(
-      readings.map(r => turf.point([r.longitude, r.latitude], { aqi: r.aqi }))
+      readings.map((r) =>
+        turf.point([r.longitude, r.latitude], { aqi: r.aqi }),
+      ),
     );
 
-    return zones.map(zone => {
+    return zones.map((zone) => {
       let maxAQI = 0;
       let minAQI = Infinity;
       let sumAQI = 0;
@@ -68,14 +70,14 @@ export class GisService {
   async getZonesGeoJson() {
     const zones = await this.repository.getAllZones();
     const features = zones
-      .filter(z => z.geometry !== null)
-      .map(z => {
+      .filter((z) => z.geometry !== null)
+      .map((z) => {
         const geom = z.geometry as any;
         return turf.feature(geom, {
           id: z.id,
           zoneCode: z.zoneCode,
           zoneName: z.zoneName,
-          city: z.city
+          city: z.city,
         });
       });
     return turf.featureCollection(features);

@@ -15,8 +15,13 @@ describe('GisService', () => {
           provide: GisRepository,
           useValue: {
             getRecentAqiReadings: jest.fn().mockResolvedValue([
-              { stationId: '1', latitude: 12.9716, longitude: 77.5946, aqi: 180 },
-              { stationId: '2', latitude: 12.9800, longitude: 77.6000, aqi: 260 },
+              {
+                stationId: '1',
+                latitude: 12.9716,
+                longitude: 77.5946,
+                aqi: 180,
+              },
+              { stationId: '2', latitude: 12.98, longitude: 77.6, aqi: 260 },
             ]),
             getAllZones: jest.fn().mockResolvedValue([
               {
@@ -24,10 +29,18 @@ describe('GisService', () => {
                 zoneName: 'Central Zone',
                 geometry: {
                   type: 'Polygon',
-                  coordinates: [[[77.5, 12.9], [77.7, 12.9], [77.7, 13.0], [77.5, 13.0], [77.5, 12.9]]]
-                }
-              }
-            ])
+                  coordinates: [
+                    [
+                      [77.5, 12.9],
+                      [77.7, 12.9],
+                      [77.7, 13.0],
+                      [77.5, 13.0],
+                      [77.5, 12.9],
+                    ],
+                  ],
+                },
+              },
+            ]),
           },
         },
       ],

@@ -20,7 +20,29 @@ describe('ForecastService (ML Integration)', () => {
           provide: ForecastRepository,
           useValue: {
             getLatestAqi: jest.fn().mockResolvedValue(150),
-            saveForecast: jest.fn().mockResolvedValue(true)
+            saveForecast: jest.fn().mockImplementation(
+              (data: {
+                stationId: string;
+                forecastAQI: number;
+                confidence: number;
+                category: string;
+                riskLevel: string;
+                forecastType: string;
+                modelVersion: string;
+              }) =>
+                Promise.resolve({
+                  id: 'f1',
+                  stationId: data.stationId,
+                  forecastAQI: data.forecastAQI,
+                  confidence: data.confidence,
+                  category: data.category,
+                  riskLevel: data.riskLevel,
+                  forecastType: data.forecastType,
+                  modelVersion: data.modelVersion,
+                  forecastDate: new Date(),
+                  createdAt: new Date(),
+                }),
+            ),
           },
         },
         {
@@ -64,6 +86,8 @@ describe('ForecastService (ML Integration)', () => {
   });
 
   it('should throw NotFoundException if station does not exist', async () => {
-    await expect(service.getForecast24h('INVALID')).rejects.toThrow(NotFoundException);
+    await expect(service.getForecast24h('INVALID')).rejects.toThrow(
+      NotFoundException,
+    );
   });
 });

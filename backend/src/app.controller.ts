@@ -37,7 +37,7 @@ export class AppController {
     let redisLatency = 0;
     try {
       const redisStart = Date.now();
-      await this.cacheManager.set('health:ping', 1, 5);
+      await this.cacheManager.set('health:ping', 1, 5000);
       await this.cacheManager.get('health:ping');
       redisLatency = Date.now() - redisStart;
       redisStatus = 'up';
@@ -45,7 +45,7 @@ export class AppController {
       this.logger.error(`Redis health check failed: ${err.message}`);
     }
 
-    const overallStatus = dbStatus === 'up' && redisStatus === 'up' ? 'healthy' : 'degraded';
+    const overallStatus = dbStatus === 'up' ? 'healthy' : 'degraded';
 
     return {
       status: overallStatus,

@@ -1,4 +1,10 @@
-import { Injectable, Inject, ExecutionContext, CallHandler, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  ExecutionContext,
+  CallHandler,
+  Logger,
+} from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
@@ -29,35 +35,54 @@ export class CacheInterceptor {
     }
 
     return new Observable((observer) => {
-      this.cacheManager.get(cacheKey).then((cached) => {
-        if (cached !== null && cached !== undefined) {
-          this.consecutiveFailures = 0;
-          this.logger.log(`Cache HIT: ${cacheKey}`);
-          observer.next(cached);
-          observer.complete();
-          return;
-        }
+      this.cacheManager
+        .get(cacheKey)
+        .then((cached) => {
+          if (cached !== null && cached !== undefined) {
+            this.consecutiveFailures = 0;
+            this.logger.log(`Cache HIT: ${cacheKey}`);
+            observer.next(cached);
+            observer.complete();
+            return;
+          }
 
-        this.logger.log(`Cache MISS: ${cacheKey}`);
-        next.handle().pipe(
-          tap((response) => {
-            this.cacheManager.set(cacheKey, response, ttl).then(() => {
-              this.consecutiveFailures = 0;
-            }).catch((err) => {
-              this.recordFailure(cacheKey, err);
+          this.logger.log(`Cache MISS: ${cacheKey}`);
+          next
+            .handle()
+            .pipe(
+              tap((response) => {
+                this.cacheManager
+                  .set(cacheKey, response, ttl)
+                  .then(() => {
+                    this.consecutiveFailures = 0;
+                  })
+                  .catch((err) => {
+                    this.recordFailure(cacheKey, err);
+                  });
+              }),
+            )
+            .subscribe({
+              next: (data) => {
+                observer.next(data);
+                observer.complete();
+              },
+              error: (err) => {
+                observer.error(err);
+              },
             });
-          }),
-        ).subscribe({
-          next: (data) => { observer.next(data); observer.complete(); },
-          error: (err) => { observer.error(err); },
+        })
+        .catch((err) => {
+          this.recordFailure(cacheKey, err);
+          next.handle().subscribe({
+            next: (data) => {
+              observer.next(data);
+              observer.complete();
+            },
+            error: (err2) => {
+              observer.error(err2);
+            },
+          });
         });
-      }).catch((err) => {
-        this.recordFailure(cacheKey, err);
-        next.handle().subscribe({
-          next: (data) => { observer.next(data); observer.complete(); },
-          error: (err2) => { observer.error(err2); },
-        });
-      });
     });
   }
 
@@ -97,9 +122,13 @@ export class CacheInterceptor {
     this.consecutiveFailures++;
     if (this.consecutiveFailures >= CIRCUIT_BREAKER_THRESHOLD) {
       this.circuitOpenUntil = Date.now() + CIRCUIT_BREAKER_RESET_MS;
-      this.logger.warn(`Cache circuit OPEN after ${CIRCUIT_BREAKER_THRESHOLD} failures (${cacheKey}): ${err.message}`);
+      this.logger.warn(
+        `Cache circuit OPEN after ${CIRCUIT_BREAKER_THRESHOLD} failures (${cacheKey}): ${err.message}`,
+      );
     } else {
-      this.logger.warn(`Cache failure #${this.consecutiveFailures} for ${cacheKey}: ${err.message}`);
+      this.logger.warn(
+        `Cache failure #${this.consecutiveFailures} for ${cacheKey}: ${err.message}`,
+      );
     }
   }
 }

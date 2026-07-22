@@ -8,7 +8,9 @@ export class IngestionController {
   constructor(private readonly ingestionService: IngestionService) {}
 
   @Post('sync')
-  @ApiOperation({ summary: 'Trigger immediate sync sweep of external live APIs' })
+  @ApiOperation({
+    summary: 'Trigger immediate sync sweep of external live APIs',
+  })
   async triggerSync() {
     await this.ingestionService.ingestAllStationsLive();
     return {
@@ -30,7 +32,9 @@ export class IngestionController {
   }
 
   @Get('status')
-  @ApiOperation({ summary: 'Get current ingestion statistics and cache status' })
+  @ApiOperation({
+    summary: 'Get current ingestion statistics and cache status',
+  })
   getStatus() {
     return {
       success: true,

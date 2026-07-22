@@ -5,5 +5,7 @@ import { EvidenceService } from './evidence.service';
 export class EvidenceController {
   constructor(private readonly evidenceService: EvidenceService) {}
   @Get()
-  getEvidence() { return this.evidenceService.getEvidence(); }
+  getEvidence() {
+    return this.evidenceService.getEvidence();
+  }
 }

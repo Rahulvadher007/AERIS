@@ -21,7 +21,11 @@ export class HotspotsController {
     @Query('city') city?: string,
     @Query() pagination?: OffsetPaginationDto,
   ) {
-    return this.hotspotsService.getHotspots(city, pagination?.page, pagination?.limit);
+    return this.hotspotsService.getHotspots(
+      city,
+      pagination?.page,
+      pagination?.limit,
+    );
   }
 
   @Get('latest')

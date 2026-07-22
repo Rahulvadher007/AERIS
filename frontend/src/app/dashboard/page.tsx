@@ -39,7 +39,8 @@ function DashboardPageContent() {
 
   // Filter stations by city
   const cityStations = stations;
-  const primaryStation = cityStations[0]?.stationCode || 'DEL001';
+  // Use first station of selected city, not hardcoded fallback
+  const primaryStation = cityStations.length > 0 ? cityStations[0].stationCode : null;
 
   // 2. Fetch Live AQI readings
   const { data: liveAqi = [], isLoading: isLoadingLive } = useQuery({
@@ -72,22 +73,22 @@ function DashboardPageContent() {
     enabled: !!selectedCity,
   });
 
-  // 6. Fetch Forecasts for primary station
+  // 6. Fetch Forecasts for primary station (only if we have a station)
   const { data: forecast24h } = useQuery({
     queryKey: ['forecast-24h', primaryStation],
-    queryFn: () => forecastService.get24h(primaryStation),
+    queryFn: () => forecastService.get24h(primaryStation!),
     enabled: !!primaryStation,
   });
 
   const { data: forecast48h } = useQuery({
     queryKey: ['forecast-48h', primaryStation],
-    queryFn: () => forecastService.get48h(primaryStation),
+    queryFn: () => forecastService.get48h(primaryStation!),
     enabled: !!primaryStation,
   });
 
   const { data: forecast72h } = useQuery({
     queryKey: ['forecast-72h', primaryStation],
-    queryFn: () => forecastService.get72h(primaryStation),
+    queryFn: () => forecastService.get72h(primaryStation!),
     enabled: !!primaryStation,
   });
 
@@ -126,45 +127,53 @@ function DashboardPageContent() {
     .map((item) => item.latestReading)
     .filter(Boolean);
 
-  const currentAqi = cityReadings.length > 0
-    ? Math.round(cityReadings.reduce((sum, r) => sum + (r?.aqi ?? 0), 0) / cityReadings.length)
-    : 165;
+  // Use forecast's currentAQI if available (consistent with forecast), otherwise calculate from live data
+  const currentAqi = forecast24h?.currentAQI 
+    ? Math.round(forecast24h.currentAQI)
+    : cityReadings.length > 0
+      ? Math.round(cityReadings.reduce((sum, r) => sum + (r?.aqi ?? 0), 0) / cityReadings.length)
+      : 0;
 
-  const forecastAqi = forecast24h?.forecastAQI || Math.round(currentAqi * 1.08);
+  const forecastAqi = forecast24h?.forecastAQI || 0;
 
   // Weather averages for selected city
   const cityWeather = weatherLatest.filter((w) => cityStationIds.includes(w.station.id) && w.latestWeather);
   const avgTemp = cityWeather.length > 0
     ? Math.round(cityWeather.reduce((sum, w) => sum + (w.latestWeather?.temperature ?? 0), 0) / cityWeather.length)
-    : 28;
+    : 0;
   const avgHumidity = cityWeather.length > 0
     ? Math.round(cityWeather.reduce((sum, w) => sum + (w.latestWeather?.humidity ?? 0), 0) / cityWeather.length)
-    : 62;
+    : 0;
   const avgWindSpeed = cityWeather.length > 0
     ? parseFloat((cityWeather.reduce((sum, w) => sum + (w.latestWeather?.windSpeed ?? 0), 0) / cityWeather.length).toFixed(1))
-    : 4.2;
+    : 0;
 
   // Traffic congestion average
-  const avgCongestion = trafficLatest.length > 0
-    ? Math.round(trafficLatest.reduce((sum, t) => sum + t.congestionScore, 0) / trafficLatest.length)
-    : 38;
+  // trafficLatest returns road objects with latestTraffic property
+  const trafficReadings = trafficLatest
+    .map((t: any) => t.latestTraffic || t)
+    .filter((t: any) => t && typeof t.congestionScore === 'number');
+  
+  const avgCongestion = trafficReadings.length > 0
+    ? Math.round(trafficReadings.reduce((sum: number, t: any) => sum + t.congestionScore, 0) / trafficReadings.length)
+    : 0;
 
   // Forecast Confidence
-  const forecastConfidence = forecast24h?.confidence || 0.89;
+  const forecastConfidence = forecast24h?.confidence || 0;
 
   // Dynamic Pollutant Breakdown
   const avgPM25 = cityReadings.length > 0
     ? Math.round(cityReadings.reduce((sum, r) => sum + (r?.pm25 ?? 0), 0) / cityReadings.length)
-    : 72;
+    : 0;
   const avgPM10 = cityReadings.length > 0
     ? Math.round(cityReadings.reduce((sum, r) => sum + (r?.pm10 ?? 0), 0) / cityReadings.length)
-    : 145;
+    : 0;
   const avgNO2 = cityReadings.length > 0
     ? Math.round(cityReadings.reduce((sum, r) => sum + (r?.no2 ?? 0), 0) / cityReadings.length)
-    : 34;
+    : 0;
   const avgSO2 = cityReadings.length > 0
     ? Math.round(cityReadings.reduce((sum, r) => sum + (r?.so2 ?? 0), 0) / cityReadings.length)
-    : 12;
+    : 0;
 
   const pollutantData = [
     { name: 'PM2.5', value: avgPM25 },
@@ -189,20 +198,8 @@ function DashboardPageContent() {
   // Recharts AQI Trend Data (last 7 readings)
   const trendData = cityReadings.slice(-7).map((r, idx) => ({
     name: new Date(r?.timestamp ?? '').toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    AQI: r?.aqi ?? 120 + idx * 10,
+    AQI: r?.aqi ?? 0,
   }));
-
-  if (trendData.length === 0) {
-    // fallback data
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date();
-      d.setHours(d.getHours() - i);
-      trendData.push({
-        name: d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        AQI: Math.round(currentAqi * (0.9 + Math.random() * 0.2)),
-      });
-    }
-  }
 
   // Target city average AQI color
   const getAqiColor = (aqi: number) => {
@@ -282,7 +279,7 @@ function DashboardPageContent() {
         {/* KPI 7 */}
         <div className="rounded-xl border border-zinc-900 bg-zinc-900/10 p-4 text-center shadow-sm">
           <span className="text-[9px] uppercase font-extrabold tracking-wider text-zinc-500">Confidence</span>
-          <div className="text-2xl font-black text-emerald-400 mt-1">{Math.round(forecastConfidence * 100)}%</div>
+          <div className="text-2xl font-black text-emerald-400 mt-1">{primaryStation ? Math.round(forecastConfidence * 100) : 0}%</div>
         </div>
         {/* KPI 8 */}
         <div className="rounded-xl border border-zinc-900 bg-zinc-900/10 p-4 text-center shadow-sm">
@@ -447,32 +444,38 @@ function DashboardPageContent() {
             Machine Learning Forecasts (XGBoost)
           </h3>
 
-          <div className="grid gap-4 grid-cols-3">
-            {/* 24h */}
-            <div className="rounded-xl border border-zinc-850 bg-zinc-900/30 p-4 text-center">
-              <span className="text-[9px] uppercase font-bold text-zinc-500 block">24 Hours</span>
-              <div className="text-xl font-black text-zinc-200 mt-1">{forecast24h?.forecastAQI || 142}</div>
-              <span className="text-[8px] font-semibold text-emerald-400 bg-emerald-500/5 px-1.5 py-0.5 rounded border border-emerald-500/10 mt-2 inline-block uppercase">
-                {forecast24h?.category || 'Moderate'}
-              </span>
+          {!primaryStation ? (
+            <div className="flex flex-col items-center justify-center p-8 text-center border border-dashed border-zinc-800 rounded-xl bg-zinc-900/10">
+              <span className="text-xs text-zinc-500 italic">No monitoring stations available for {selectedCity}. Add stations to enable forecasting.</span>
             </div>
-            {/* 48h */}
-            <div className="rounded-xl border border-zinc-850 bg-zinc-900/30 p-4 text-center">
-              <span className="text-[9px] uppercase font-bold text-zinc-500 block">48 Hours</span>
-              <div className="text-xl font-black text-zinc-200 mt-1">{forecast48h?.forecastAQI || 155}</div>
-              <span className="text-[8px] font-semibold text-amber-400 bg-amber-500/5 px-1.5 py-0.5 rounded border border-amber-500/10 mt-2 inline-block uppercase">
-                {forecast48h?.category || 'Moderate'}
-              </span>
+          ) : (
+            <div className="grid gap-4 grid-cols-3">
+              {/* 24h */}
+              <div className="rounded-xl border border-zinc-850 bg-zinc-900/30 p-4 text-center">
+                <span className="text-[9px] uppercase font-bold text-zinc-500 block">24 Hours</span>
+                <div className="text-xl font-black text-zinc-200 mt-1">{forecast24h?.forecastAQI || '--'}</div>
+                <span className="text-[8px] font-semibold text-emerald-400 bg-emerald-500/5 px-1.5 py-0.5 rounded border border-emerald-500/10 mt-2 inline-block uppercase">
+                  {forecast24h?.category || 'No Data'}
+                </span>
+              </div>
+              {/* 48h */}
+              <div className="rounded-xl border border-zinc-850 bg-zinc-900/30 p-4 text-center">
+                <span className="text-[9px] uppercase font-bold text-zinc-500 block">48 Hours</span>
+                <div className="text-xl font-black text-zinc-200 mt-1">{forecast48h?.forecastAQI || '--'}</div>
+                <span className="text-[8px] font-semibold text-amber-400 bg-amber-500/5 px-1.5 py-0.5 rounded border border-amber-500/10 mt-2 inline-block uppercase">
+                  {forecast48h?.category || 'No Data'}
+                </span>
+              </div>
+              {/* 72h */}
+              <div className="rounded-xl border border-zinc-850 bg-zinc-900/30 p-4 text-center">
+                <span className="text-[9px] uppercase font-bold text-zinc-500 block">72 Hours</span>
+                <div className="text-xl font-black text-zinc-200 mt-1">{forecast72h?.forecastAQI || '--'}</div>
+                <span className="text-[8px] font-semibold text-orange-400 bg-orange-500/5 px-1.5 py-0.5 rounded border border-orange-500/10 mt-2 inline-block uppercase">
+                  {forecast72h?.category || 'No Data'}
+                </span>
+              </div>
             </div>
-            {/* 72h */}
-            <div className="rounded-xl border border-zinc-850 bg-zinc-900/30 p-4 text-center">
-              <span className="text-[9px] uppercase font-bold text-zinc-500 block">72 Hours</span>
-              <div className="text-xl font-black text-zinc-200 mt-1">{forecast72h?.forecastAQI || 168}</div>
-              <span className="text-[8px] font-semibold text-orange-400 bg-orange-500/5 px-1.5 py-0.5 rounded border border-orange-500/10 mt-2 inline-block uppercase">
-                {forecast72h?.category || 'Poor'}
-              </span>
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Weather Grid */}

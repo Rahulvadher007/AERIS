@@ -50,6 +50,12 @@ jobs:
       - name: Build frontend
         run: npm run build --prefix frontend
 
+      - name: Deploy Prisma migrations
+        run: npx prisma migrate deploy
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/aeris_test
+
       - name: Test backend
         run: npm test --prefix backend
         env:

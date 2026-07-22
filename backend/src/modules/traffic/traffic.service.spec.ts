@@ -15,11 +15,20 @@ describe('TrafficService', () => {
             getCongestionHotspots: jest.fn().mockResolvedValue([
               {
                 id: '1',
-                road: { roadName: 'NH48', geometry: { type: 'LineString', coordinates: [[0,0], [1,1]] } },
+                road: {
+                  roadName: 'NH48',
+                  geometry: {
+                    type: 'LineString',
+                    coordinates: [
+                      [0, 0],
+                      [1, 1],
+                    ],
+                  },
+                },
                 congestionScore: 85,
                 averageSpeed: 10,
-                timestamp: new Date()
-              }
+                timestamp: new Date(),
+              },
             ]),
           },
         },

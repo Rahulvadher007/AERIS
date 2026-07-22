@@ -10,6 +10,10 @@ export class HotspotsRepository {
     return this.prisma.hotspot.createMany({ data });
   }
 
+  async deleteAll() {
+    return this.prisma.hotspot.deleteMany();
+  }
+
   async findAll(city?: string, skip = 0, take = 50) {
     const where: any = {};
     if (city) {

@@ -13,6 +13,10 @@ export class InterventionsRepository {
     return this.prisma.intervention.createMany({ data });
   }
 
+  async deleteAll() {
+    return this.prisma.intervention.deleteMany();
+  }
+
   async findAll(city?: string) {
     const where: any = {};
     if (city) {
@@ -24,11 +28,11 @@ export class InterventionsRepository {
         zone: {
           include: {
             hotspots: { take: 5, orderBy: { detectedAt: 'desc' } },
-            roads: true
-          }
-        }
+            roads: true,
+          },
+        },
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
     });
   }
 
@@ -39,10 +43,10 @@ export class InterventionsRepository {
         zone: {
           include: {
             hotspots: { take: 5, orderBy: { detectedAt: 'desc' } },
-            roads: true
-          }
-        }
-      }
+            roads: true,
+          },
+        },
+      },
     });
   }
 
@@ -53,11 +57,11 @@ export class InterventionsRepository {
         zone: {
           include: {
             hotspots: { take: 5, orderBy: { detectedAt: 'desc' } },
-            roads: true
-          }
-        }
+            roads: true,
+          },
+        },
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
     });
   }
 
@@ -67,15 +71,19 @@ export class InterventionsRepository {
       where.zone = { city: { contains: city, mode: 'insensitive' } };
     }
     const total = await this.prisma.intervention.count({ where });
-    const critical = await this.prisma.intervention.count({ where: { ...where, priority: 'CRITICAL' } });
-    const high = await this.prisma.intervention.count({ where: { ...where, priority: 'HIGH' } });
-    
+    const critical = await this.prisma.intervention.count({
+      where: { ...where, priority: 'CRITICAL' },
+    });
+    const high = await this.prisma.intervention.count({
+      where: { ...where, priority: 'HIGH' },
+    });
+
     // Most recent critical zones
     const criticalZones = await this.prisma.intervention.findMany({
       where: { ...where, priority: 'CRITICAL' },
       include: { zone: true },
       distinct: ['zoneId'],
-      take: 10
+      take: 10,
     });
 
     return { total, critical, high, criticalZones };

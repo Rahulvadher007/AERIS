@@ -43,22 +43,18 @@ export default function GisMap({ stations, hotspots, selectedCity }: GisMapProps
     });
   }, []);
 
-  // Center map based on selected city
-  const getCityCoordinates = (city: string): [number, number] => {
-    const coords: Record<string, [number, number]> = {
-      Delhi: [28.6139, 77.2090],
-      Mumbai: [19.0760, 72.8777],
-      Ahmedabad: [23.0225, 72.5714],
-      Vadodara: [22.3072, 73.1812],
-      Morbi: [22.8120, 70.8236],
-      Bharuch: [21.7051, 72.9959],
-      Silchar: [24.8333, 92.7789],
-      Vapi: [20.3717, 72.9100],
-    };
-    return coords[city] || [23.0225, 72.5714];
+  // Compute map center from station coordinates (average lat/lng)
+  const getCityCenter = (): [number, number] => {
+    if (stations.length > 0) {
+      const avgLat = stations.reduce((sum, s) => sum + s.latitude, 0) / stations.length;
+      const avgLng = stations.reduce((sum, s) => sum + s.longitude, 0) / stations.length;
+      return [avgLat, avgLng];
+    }
+    // Fallback to India center if no stations
+    return [20.5937, 78.9629];
   };
 
-  const center = getCityCoordinates(selectedCity);
+  const center = getCityCenter();
 
   // Helper to get AQI color
   const getAqiColor = (aqi: number) => {

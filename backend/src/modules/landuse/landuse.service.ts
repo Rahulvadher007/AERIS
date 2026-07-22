@@ -10,7 +10,8 @@ export class LandUseService {
 
   summarize(features: { category: string }[]) {
     const total = features.length || 1;
-    const count = (c: string) => features.filter((f) => f.category === c).length;
+    const count = (c: string) =>
+      features.filter((f) => f.category === c).length;
     return {
       industrialPct: Math.round((count('INDUSTRIAL') / total) * 100),
       constructionPct: Math.round((count('CONSTRUCTION') / total) * 100),
@@ -23,19 +24,29 @@ export class LandUseService {
     };
   }
 
-  async getLandUseForZone(zone: { city: string; latitude?: number; longitude?: number }) {
+  async getLandUseForZone(zone: {
+    city: string;
+    latitude?: number;
+    longitude?: number;
+  }) {
     if (this.cache.has(zone.city)) return this.cache.get(zone.city);
-    const features = await this.prisma.landUseFeature.findMany({ where: { city: zone.city } });
+    const features = await this.prisma.landUseFeature.findMany({
+      where: { city: zone.city },
+    });
     const out = this.summarize(features);
     this.cache.set(zone.city, out);
     return out;
   }
 
   async fetchAndStore(city: string, lat: number, lon: number) {
-    const url = process.env.OVERPASS_URL || 'https://overpass-api.de/api/interpreter';
+    const url =
+      process.env.OVERPASS_URL || 'https://overpass-api.de/api/interpreter';
     const query = `[out:json];(node["amenity"~"hospital|school"](around:15000,${lat},${lon});way["landuse"~"industrial|construction"](around:15000,${lat},${lon}););out;`;
     try {
-      const res = await fetch(url, { method: 'POST', body: 'data=' + encodeURIComponent(query) });
+      const res = await fetch(url, {
+        method: 'POST',
+        body: 'data=' + encodeURIComponent(query),
+      });
       if (!res.ok) throw new Error(`Overpass ${res.status}`);
       const json = await res.json();
       const rows = json.elements.map((e: any) => ({
@@ -45,7 +56,10 @@ export class LandUseService {
         longitude: e.lon ?? e.center?.lon,
         name: e.tags?.name ?? null,
       }));
-      await this.prisma.landUseFeature.createMany({ data: rows, skipDuplicates: true });
+      await this.prisma.landUseFeature.createMany({
+        data: rows,
+        skipDuplicates: true,
+      });
       const out = this.summarize(rows);
       this.cache.set(city, out);
       return out;
@@ -59,7 +73,11 @@ export class LandUseService {
     const lu = e.tags?.landuse;
     if (lu === 'industrial') return 'INDUSTRIAL';
     if (lu === 'construction') return 'CONSTRUCTION';
-    if (e.tags?.highway && ['motorway', 'trunk', 'primary'].includes(e.tags.highway)) return 'MAJOR_ROAD';
+    if (
+      e.tags?.highway &&
+      ['motorway', 'trunk', 'primary'].includes(e.tags.highway)
+    )
+      return 'MAJOR_ROAD';
     if (e.tags?.amenity === 'hospital') return 'HOSPITAL';
     if (e.tags?.amenity === 'school') return 'SCHOOL';
     if (e.tags?.amenity === 'social_facility') return 'ELDERLY_CARE';

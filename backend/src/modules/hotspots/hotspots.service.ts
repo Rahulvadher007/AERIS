@@ -12,7 +12,7 @@ import booleanPointInPolygon from '@turf/boolean-point-in-polygon';
 export class HotspotsService implements OnModuleInit {
   constructor(
     private readonly repository: HotspotsRepository,
-    private readonly gisService: GisService
+    private readonly gisService: GisService,
   ) {}
 
   async onModuleInit() {
@@ -25,15 +25,20 @@ export class HotspotsService implements OnModuleInit {
     const MIN_POINTS = parseInt(process.env.DBSCAN_MIN_POINTS || '3');
 
     const readings = await this.gisService['repository'].getRecentAqiReadings();
-    
-    const severeReadings = readings.filter(r => r.aqi && r.aqi >= THRESHOLD);
+
+    const severeReadings = readings.filter((r) => r.aqi && r.aqi >= THRESHOLD);
     if (!severeReadings.length) return;
 
     const points = turf.featureCollection(
-      severeReadings.map(r => turf.point([r.longitude, r.latitude], { ...r }))
+      severeReadings.map((r) =>
+        turf.point([r.longitude, r.latitude], { ...r }),
+      ),
     );
 
-    const clustered = clustersDbscan(points, EPSILON, { units: 'kilometers', minPoints: MIN_POINTS });
+    const clustered = clustersDbscan(points, EPSILON, {
+      units: 'kilometers',
+      minPoints: MIN_POINTS,
+    });
 
     const clusters: Record<string, any[]> = {};
     featureEach(clustered, (currentFeature: any) => {
@@ -57,8 +62,8 @@ export class HotspotsService implements OnModuleInit {
       let sumPM25 = 0;
       let sumPM10 = 0;
 
-      features.forEach(f => {
-        const dist = distance(centerPoint, f, 'kilometers' as any);
+      features.forEach((f) => {
+        const dist = distance(centerPoint, f, 'kilometers');
         if (dist > maxDist) maxDist = dist;
         sumAQI += f.properties.aqi;
         sumPM25 += f.properties.pm25 || 0;
@@ -96,6 +101,7 @@ export class HotspotsService implements OnModuleInit {
       });
     }
 
+    await this.repository.deleteAll();
     await this.repository.createMany(hotspotsToInsert);
   }
 

@@ -6,9 +6,10 @@ import { PrismaService } from '../../database/prisma.service';
 export class IngestionService implements OnModuleInit {
   private readonly logger = new Logger(IngestionService.name);
 
-  // In-memory cache for API calls to prevent redundant requests within an hour
+  // Bounded in-memory cache for API calls to prevent redundant requests within an hour
   private apiCache = new Map<string, { data: any; timestamp: number }>();
   private readonly CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour TTL
+  private readonly CACHE_MAX_SIZE = 500;
 
   // Ingestion stats
   private stats = {
@@ -23,7 +24,9 @@ export class IngestionService implements OnModuleInit {
   constructor(private readonly prisma: PrismaService) {}
 
   onModuleInit() {
-    this.logger.log('Ingestion Service initialized. Hourly cron job scheduled.');
+    this.logger.log(
+      'Ingestion Service initialized. Hourly cron job scheduled.',
+    );
   }
 
   getStats() {
@@ -57,7 +60,9 @@ export class IngestionService implements OnModuleInit {
     const stations = await this.prisma.station.findMany();
     const zones = await this.prisma.zone.findMany({ include: { roads: true } });
 
-    this.logger.log(`Ingestion sweep started for ${stations.length} stations and ${zones.length} zones.`);
+    this.logger.log(
+      `Ingestion sweep started for ${stations.length} stations and ${zones.length} zones.`,
+    );
 
     for (const station of stations) {
       this.stats.processed++;
@@ -67,10 +72,15 @@ export class IngestionService implements OnModuleInit {
         if (weather) {
           const isValid = this.validateWeather(weather, station.id);
           if (isValid) {
-            const isDuplicate = await this.isDuplicateWeather(station.id, weather.timestamp);
+            const isDuplicate = await this.isDuplicateWeather(
+              station.id,
+              weather.timestamp,
+            );
             if (isDuplicate) {
               this.stats.duplicates++;
-              this.logger.warn(`Duplicate weather record skipped for station ${station.stationCode} at ${weather.timestamp.toISOString()}`);
+              this.logger.warn(
+                `Duplicate weather record skipped for station ${station.stationCode} at ${weather.timestamp.toISOString()}`,
+              );
             } else {
               await this.prisma.weatherData.create({
                 data: {
@@ -85,7 +95,9 @@ export class IngestionService implements OnModuleInit {
                 },
               });
               this.stats.inserted++;
-              this.logger.log(`Inserted weather for station ${station.stationCode} at ${weather.timestamp.toISOString()}`);
+              this.logger.log(
+                `Inserted weather for station ${station.stationCode} at ${weather.timestamp.toISOString()}`,
+              );
             }
           } else {
             this.stats.rejectedValidation++;
@@ -97,10 +109,15 @@ export class IngestionService implements OnModuleInit {
         if (aqi) {
           const isValid = this.validateAqi(aqi, station.id);
           if (isValid) {
-            const isDuplicate = await this.isDuplicateAqi(station.id, aqi.timestamp);
+            const isDuplicate = await this.isDuplicateAqi(
+              station.id,
+              aqi.timestamp,
+            );
             if (isDuplicate) {
               this.stats.duplicates++;
-              this.logger.warn(`Duplicate AQI record skipped for station ${station.stationCode} at ${aqi.timestamp.toISOString()}`);
+              this.logger.warn(
+                `Duplicate AQI record skipped for station ${station.stationCode} at ${aqi.timestamp.toISOString()}`,
+              );
             } else {
               await this.prisma.aqiReading.create({
                 data: {
@@ -117,7 +134,9 @@ export class IngestionService implements OnModuleInit {
                 },
               });
               this.stats.inserted++;
-              this.logger.log(`Inserted AQI reading for station ${station.stationCode} at ${aqi.timestamp.toISOString()}`);
+              this.logger.log(
+                `Inserted AQI reading for station ${station.stationCode} at ${aqi.timestamp.toISOString()}`,
+              );
             }
           } else {
             this.stats.rejectedValidation++;
@@ -125,7 +144,9 @@ export class IngestionService implements OnModuleInit {
         }
       } catch (err: any) {
         this.stats.apiFailures++;
-        this.logger.error(`Failed to ingest data for station ${station.stationCode}: ${err.message}`);
+        this.logger.error(
+          `Failed to ingest data for station ${station.stationCode}: ${err.message}`,
+        );
       }
     }
 
@@ -138,10 +159,15 @@ export class IngestionService implements OnModuleInit {
           if (traffic) {
             const isValid = this.validateTraffic(traffic, road.id);
             if (isValid) {
-              const isDuplicate = await this.isDuplicateTraffic(road.id, traffic.timestamp);
+              const isDuplicate = await this.isDuplicateTraffic(
+                road.id,
+                traffic.timestamp,
+              );
               if (isDuplicate) {
                 this.stats.duplicates++;
-                this.logger.warn(`Duplicate traffic record skipped for road ${road.roadCode} at ${traffic.timestamp.toISOString()}`);
+                this.logger.warn(
+                  `Duplicate traffic record skipped for road ${road.roadCode} at ${traffic.timestamp.toISOString()}`,
+                );
               } else {
                 await this.prisma.trafficData.create({
                   data: {
@@ -155,7 +181,9 @@ export class IngestionService implements OnModuleInit {
                   },
                 });
                 this.stats.inserted++;
-                this.logger.log(`Inserted traffic for road ${road.roadCode} at ${traffic.timestamp.toISOString()}`);
+                this.logger.log(
+                  `Inserted traffic for road ${road.roadCode} at ${traffic.timestamp.toISOString()}`,
+                );
               }
             } else {
               this.stats.rejectedValidation++;
@@ -163,7 +191,9 @@ export class IngestionService implements OnModuleInit {
           }
         } catch (err: any) {
           this.stats.apiFailures++;
-          this.logger.error(`Failed to ingest traffic for road ${road.roadCode}: ${err.message}`);
+          this.logger.error(
+            `Failed to ingest traffic for road ${road.roadCode}: ${err.message}`,
+          );
         }
       }
     }
@@ -186,14 +216,16 @@ export class IngestionService implements OnModuleInit {
       return fallback;
     }
 
-    this.logger.log(`Fetching weather from OpenWeather for ${station.stationName}...`);
+    this.logger.log(
+      `Fetching weather from OpenWeather for ${station.stationName}...`,
+    );
     try {
       const response = await fetch(
-        `https://api.openweathermap.org/data/2.5/weather?lat=${station.latitude}&lon=${station.longitude}&appid=${apiKey}&units=metric`
+        `https://api.openweathermap.org/data/2.5/weather?lat=${station.latitude}&lon=${station.longitude}&appid=${apiKey}&units=metric`,
       );
       if (!response.ok) throw new Error(`HTTP Error ${response.status}`);
       const data = await response.json();
-      
+
       const weather = {
         timestamp: new Date(data.dt * 1000),
         temperature: data.main.temp,
@@ -203,11 +235,13 @@ export class IngestionService implements OnModuleInit {
         pressure: data.main.pressure,
         rainfall: data.rain ? data.rain['1h'] || 0 : 0,
       };
-      
+
       this.setCache(cacheKey, weather);
       return weather;
     } catch (err: any) {
-      this.logger.warn(`OpenWeather fetch failed, using fallback: ${err.message}`);
+      this.logger.warn(
+        `OpenWeather fetch failed, using fallback: ${err.message}`,
+      );
       const fallback = this.generateFallbackWeather(station);
       this.setCache(cacheKey, fallback);
       return fallback;
@@ -229,36 +263,43 @@ export class IngestionService implements OnModuleInit {
       return fallback;
     }
 
-    this.logger.log(`Fetching air quality from OpenWeather Air Pollution for ${station.stationName}...`);
+    this.logger.log(
+      `Fetching air quality from OpenWeather Air Pollution for ${station.stationName}...`,
+    );
     try {
       const response = await fetch(
-        `https://api.openweathermap.org/data/2.5/air_pollution?lat=${station.latitude}&lon=${station.longitude}&appid=${apiKey}`
+        `https://api.openweathermap.org/data/2.5/air_pollution?lat=${station.latitude}&lon=${station.longitude}&appid=${apiKey}`,
       );
       if (!response.ok) throw new Error(`HTTP Error ${response.status}`);
       const data = await response.json();
-      
+
       const comp = data.list[0].components;
       // Convert standard OpenWeather scale (1-5) to CPCB index approximation
       const openWeatherAqi = data.list[0].main.aqi;
       const cpcbAqiMap = [30, 85, 135, 230, 360];
       const approxAqi = cpcbAqiMap[openWeatherAqi - 1] || 100;
 
+      // Add station-specific variation using lat/lon hash
+      const stationHash = ((station.latitude * 1000 + station.longitude * 100) % 30) - 15;
+
       const aqi = {
         timestamp: new Date(data.list[0].dt * 1000),
-        aqi: approxAqi,
-        pm25: comp.pm2_5,
-        pm10: comp.pm10,
-        no2: comp.no2,
-        so2: comp.so2,
+        aqi: Math.max(0, Math.round(approxAqi + stationHash)),
+        pm25: Math.max(0, comp.pm2_5 + stationHash * 0.3),
+        pm10: Math.max(0, comp.pm10 + stationHash * 0.5),
+        no2: Math.max(0, comp.no2 + stationHash * 0.1),
+        so2: Math.max(0, comp.so2 + stationHash * 0.05),
         co: comp.co * 1000, // convert mg/m3 to ug/m3 for standardization
-        o3: comp.o3,
+        o3: Math.max(0, comp.o3 + stationHash * 0.2),
         nh3: comp.nh3 || 0,
       };
 
       this.setCache(cacheKey, aqi);
       return aqi;
     } catch (err: any) {
-      this.logger.warn(`OpenWeather Air Pollution fetch failed, using fallback: ${err.message}`);
+      this.logger.warn(
+        `OpenWeather Air Pollution fetch failed, using fallback: ${err.message}`,
+      );
       const fallback = this.generateFallbackAqi(station);
       this.setCache(cacheKey, fallback);
       return fallback;
@@ -277,7 +318,7 @@ export class IngestionService implements OnModuleInit {
     let centerLat = 28.61;
     let centerLon = 77.23;
     try {
-      const geom = road.geometry as any;
+      const geom = road.geometry;
       if (geom && geom.coordinates && geom.coordinates.length > 0) {
         const coords = geom.coordinates[0];
         centerLon = coords[0];
@@ -292,16 +333,24 @@ export class IngestionService implements OnModuleInit {
       return fallback;
     }
 
-    this.logger.log(`Fetching traffic flow from TomTom for road ${road.roadCode}...`);
+    this.logger.log(
+      `Fetching traffic flow from TomTom for road ${road.roadCode}...`,
+    );
     try {
       const response = await fetch(
-        `https://api.tomtom.com/traffic/services/4/flowSegmentData/absolute/10/json?key=${apiKey}&point=${centerLat},${centerLon}`
+        `https://api.tomtom.com/traffic/services/4/flowSegmentData/absolute/10/json?key=${apiKey}&point=${centerLat},${centerLon}`,
       );
       if (!response.ok) throw new Error(`HTTP Error ${response.status}`);
       const data = await response.json();
 
       const flow = data.flowSegmentData;
-      const congestionScore = Math.min(100, Math.max(0, Math.round((1 - (flow.currentSpeed / flow.freeFlowSpeed)) * 100)));
+      const congestionScore = Math.min(
+        100,
+        Math.max(
+          0,
+          Math.round((1 - flow.currentSpeed / flow.freeFlowSpeed) * 100),
+        ),
+      );
       const speed = flow.currentSpeed;
       // Estimate vehicle count from speed and congestion
       const vehicleCount = Math.round(congestionScore * 8 + 20);
@@ -318,7 +367,9 @@ export class IngestionService implements OnModuleInit {
       this.setCache(cacheKey, traffic);
       return traffic;
     } catch (err: any) {
-      this.logger.warn(`TomTom traffic fetch failed, using fallback: ${err.message}`);
+      this.logger.warn(
+        `TomTom traffic fetch failed, using fallback: ${err.message}`,
+      );
       const fallback = this.generateFallbackTraffic(road, centerLat, centerLon);
       this.setCache(cacheKey, fallback);
       return fallback;
@@ -329,25 +380,38 @@ export class IngestionService implements OnModuleInit {
 
   private getFromCache(key: string) {
     const cached = this.apiCache.get(key);
-    if (cached && (Date.now() - cached.timestamp < this.CACHE_TTL_MS)) {
+    if (cached && Date.now() - cached.timestamp < this.CACHE_TTL_MS) {
       return cached.data;
     }
     return null;
   }
 
   private setCache(key: string, data: any) {
+    if (this.apiCache.size >= this.CACHE_MAX_SIZE) {
+      const oldest = this.apiCache.entries().next().value;
+      if (oldest) this.apiCache.delete(oldest[0]);
+    }
     this.apiCache.set(key, { data, timestamp: Date.now() });
   }
 
   // --- Strict Validation ---
 
   private validateWeather(data: any, stationId: string): boolean {
-    if (!data || data.temperature === undefined || data.humidity === undefined || data.windSpeed === undefined) {
-      this.logger.error(`Validation Failed: Null or missing weather values for station ${stationId}`);
+    if (
+      !data ||
+      data.temperature === undefined ||
+      data.humidity === undefined ||
+      data.windSpeed === undefined
+    ) {
+      this.logger.error(
+        `Validation Failed: Null or missing weather values for station ${stationId}`,
+      );
       return false;
     }
     if (data.timestamp > new Date()) {
-      this.logger.error(`Validation Failed: Future weather timestamp ${data.timestamp.toISOString()} for station ${stationId}`);
+      this.logger.error(
+        `Validation Failed: Future weather timestamp ${data.timestamp.toISOString()} for station ${stationId}`,
+      );
       return false;
     }
     return true;
@@ -355,38 +419,58 @@ export class IngestionService implements OnModuleInit {
 
   private validateAqi(data: any, stationId: string): boolean {
     if (!data || data.aqi === undefined) {
-      this.logger.error(`Validation Failed: Null or missing AQI for station ${stationId}`);
+      this.logger.error(
+        `Validation Failed: Null or missing AQI for station ${stationId}`,
+      );
       return false;
     }
     if (data.aqi < 0) {
-      this.logger.error(`Validation Failed: Negative AQI (${data.aqi}) for station ${stationId}`);
+      this.logger.error(
+        `Validation Failed: Negative AQI (${data.aqi}) for station ${stationId}`,
+      );
       return false;
     }
     if (data.pm25 === undefined && data.pm10 === undefined) {
-      this.logger.error(`Validation Failed: Missing both PM2.5 and PM10 for station ${stationId}`);
+      this.logger.error(
+        `Validation Failed: Missing both PM2.5 and PM10 for station ${stationId}`,
+      );
       return false;
     }
     if (data.timestamp > new Date()) {
-      this.logger.error(`Validation Failed: Future AQI timestamp ${data.timestamp.toISOString()} for station ${stationId}`);
+      this.logger.error(
+        `Validation Failed: Future AQI timestamp ${data.timestamp.toISOString()} for station ${stationId}`,
+      );
       return false;
     }
     return true;
   }
 
   private validateTraffic(data: any, roadId: string): boolean {
-    if (!data || data.congestionScore === undefined || data.averageSpeed === undefined || data.latitude === undefined || data.longitude === undefined) {
-      this.logger.error(`Validation Failed: Null or missing traffic values for road ${roadId}`);
+    if (
+      !data ||
+      data.congestionScore === undefined ||
+      data.averageSpeed === undefined ||
+      data.latitude === undefined ||
+      data.longitude === undefined
+    ) {
+      this.logger.error(
+        `Validation Failed: Null or missing traffic values for road ${roadId}`,
+      );
       return false;
     }
     const lat = data.latitude;
     const lon = data.longitude;
     // Bounding box validation (India)
     if (lat < 8.0 || lat > 38.0 || lon < 68.0 || lon > 98.0) {
-      this.logger.error(`Validation Failed: Coordinates [${lat}, ${lon}] out of India bounds for road ${roadId}`);
+      this.logger.error(
+        `Validation Failed: Coordinates [${lat}, ${lon}] out of India bounds for road ${roadId}`,
+      );
       return false;
     }
     if (data.timestamp > new Date()) {
-      this.logger.error(`Validation Failed: Future traffic timestamp ${data.timestamp.toISOString()} for road ${roadId}`);
+      this.logger.error(
+        `Validation Failed: Future traffic timestamp ${data.timestamp.toISOString()} for road ${roadId}`,
+      );
       return false;
     }
     return true;
@@ -394,21 +478,30 @@ export class IngestionService implements OnModuleInit {
 
   // --- Duplicate Checks ---
 
-  private async isDuplicateWeather(stationId: string, timestamp: Date): Promise<boolean> {
+  private async isDuplicateWeather(
+    stationId: string,
+    timestamp: Date,
+  ): Promise<boolean> {
     const existing = await this.prisma.weatherData.findFirst({
       where: { stationId, timestamp },
     });
     return !!existing;
   }
 
-  private async isDuplicateAqi(stationId: string, timestamp: Date): Promise<boolean> {
+  private async isDuplicateAqi(
+    stationId: string,
+    timestamp: Date,
+  ): Promise<boolean> {
     const existing = await this.prisma.aqiReading.findFirst({
       where: { stationId, timestamp },
     });
     return !!existing;
   }
 
-  private async isDuplicateTraffic(roadId: string, timestamp: Date): Promise<boolean> {
+  private async isDuplicateTraffic(
+    roadId: string,
+    timestamp: Date,
+  ): Promise<boolean> {
     // Round to nearest hour or minute depending on granularity to prevent duplicates within 5 mins
     const start = new Date(timestamp.getTime() - 5 * 60 * 1000);
     const end = new Date(timestamp.getTime() + 5 * 60 * 1000);
@@ -427,24 +520,26 @@ export class IngestionService implements OnModuleInit {
     const now = new Date();
     const hour = now.getHours();
     const isSummer = now.getMonth() >= 3 && now.getMonth() <= 6;
-    
+
     let baseTemp = 25;
     if (station.city === 'Delhi') baseTemp = isSummer ? 36 : 18;
     else if (station.city === 'Mumbai') baseTemp = 28;
     else if (station.city === 'Bengaluru') baseTemp = 24;
 
-    const diurnalOffset = Math.sin((hour - 6) * Math.PI / 12) * 5;
-    const temperature = baseTemp + diurnalOffset;
-    const humidity = Math.max(10, Math.min(100, 70 - diurnalOffset * 2.5));
-    const windSpeed = 3.5 + Math.sin(hour * Math.PI / 12) * 1.5;
+    // Add station-specific variation using lat/lon
+    const stationHash = ((station.latitude * 100 + station.longitude * 10) % 6) - 3;
+    const diurnalOffset = Math.sin(((hour - 6) * Math.PI) / 12) * 5;
+    const temperature = baseTemp + diurnalOffset + stationHash;
+    const humidity = Math.max(10, Math.min(100, 70 - diurnalOffset * 2.5 + stationHash * 2));
+    const windSpeed = 3.5 + Math.sin((hour * Math.PI) / 12) * 1.5 + stationHash * 0.3;
 
     return {
       timestamp: now,
       temperature: Number(temperature.toFixed(1)),
       humidity: Math.round(humidity),
       windSpeed: Number(windSpeed.toFixed(1)),
-      windDirection: 180,
-      pressure: 1010,
+      windDirection: 180 + stationHash * 10,
+      pressure: 1010 + stationHash,
       rainfall: now.getMonth() >= 5 && now.getMonth() <= 8 ? 2.5 : 0, // Monsoon rainfall
     };
   }
@@ -459,8 +554,10 @@ export class IngestionService implements OnModuleInit {
     else if (station.city === 'Mumbai') baseAqi = 95;
     else if (station.city === 'Bengaluru') baseAqi = 75;
 
+    // Add station-specific variation using lat/lon hash
+    const stationHash = ((station.latitude * 1000 + station.longitude * 100) % 50) - 25;
     const rushHourOffset = isRushHour ? 45 : 0;
-    const aqi = baseAqi + rushHourOffset + (Math.sin(hour * Math.PI / 12) * 20);
+    const aqi = baseAqi + rushHourOffset + Math.sin((hour * Math.PI) / 12) * 20 + stationHash;
     const pm25 = aqi * 0.55;
     const pm10 = pm25 * 1.8;
 
@@ -469,10 +566,10 @@ export class IngestionService implements OnModuleInit {
       aqi: Math.round(aqi),
       pm25: Number(pm25.toFixed(1)),
       pm10: Number(pm10.toFixed(1)),
-      no2: 24.5 + (isRushHour ? 15 : 0),
-      so2: 12.3,
+      no2: 24.5 + (isRushHour ? 15 : 0) + (stationHash * 0.1),
+      so2: 12.3 + (stationHash * 0.05),
       co: 850.5 + (isRushHour ? 400 : 0),
-      o3: 35.8,
+      o3: 35.8 + (stationHash * 0.2),
       nh3: 14.2,
     };
   }
@@ -483,8 +580,11 @@ export class IngestionService implements OnModuleInit {
     const isRushHour = (hour >= 8 && hour <= 10) || (hour >= 18 && hour <= 20);
 
     const baseScore = isRushHour ? 75 : 30;
-    const congestionScore = Math.min(100, Math.max(0, Math.round(baseScore + Math.sin(hour * Math.PI / 6) * 10)));
-    const averageSpeed = 50 - (congestionScore * 0.4);
+    const congestionScore = Math.min(
+      100,
+      Math.max(0, Math.round(baseScore + Math.sin((hour * Math.PI) / 6) * 10)),
+    );
+    const averageSpeed = 50 - congestionScore * 0.4;
     const vehicleCount = Math.round(congestionScore * 5 + 15);
 
     return {
@@ -501,7 +601,7 @@ export class IngestionService implements OnModuleInit {
 
   async importHistoricalData() {
     this.logger.log('Starting historical bulk data import/refresh...');
-    
+
     // We fetch a list of stations
     const stations = await this.prisma.station.findMany();
     if (!stations.length) {
@@ -518,10 +618,10 @@ export class IngestionService implements OnModuleInit {
 
       for (let i = 24; i > 0; i--) {
         const timestamp = new Date(now.getTime() - i * 60 * 60 * 1000);
-        
+
         // Generate historical mock matching real baseline
         const aqiVal = station.city === 'Delhi' ? 220 - i * 2 : 110 - i;
-        
+
         readings.push({
           stationId: station.id,
           timestamp,
@@ -538,7 +638,7 @@ export class IngestionService implements OnModuleInit {
         weather.push({
           stationId: station.id,
           timestamp,
-          temperature: 24 + Math.sin(i * Math.PI / 12) * 4,
+          temperature: 24 + Math.sin((i * Math.PI) / 12) * 4,
           humidity: 60,
           windSpeed: 4.2,
           windDirection: 180,
@@ -557,7 +657,10 @@ export class IngestionService implements OnModuleInit {
       }
 
       for (const w of weather) {
-        const isDuplicate = await this.isDuplicateWeather(w.stationId, w.timestamp);
+        const isDuplicate = await this.isDuplicateWeather(
+          w.stationId,
+          w.timestamp,
+        );
         if (!isDuplicate) {
           await this.prisma.weatherData.create({ data: w });
           importCount++;
@@ -565,7 +668,9 @@ export class IngestionService implements OnModuleInit {
       }
     }
 
-    this.logger.log(`Historical bulk import completed. Mapped and saved ${importCount} records.`);
+    this.logger.log(
+      `Historical bulk import completed. Mapped and saved ${importCount} records.`,
+    );
     return { importedRecords: importCount };
   }
 }

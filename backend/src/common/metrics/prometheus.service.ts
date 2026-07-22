@@ -52,8 +52,16 @@ export class PrometheusService implements OnModuleInit {
     });
   }
 
-  recordHttpRequest(method: string, path: string, status: number, durationMs: number) {
-    this.httpRequestDuration.observe({ method, path, status: String(status) }, durationMs);
+  recordHttpRequest(
+    method: string,
+    path: string,
+    status: number,
+    durationMs: number,
+  ) {
+    this.httpRequestDuration.observe(
+      { method, path, status: String(status) },
+      durationMs,
+    );
     this.httpRequestsTotal.inc({ method, path, status: String(status) });
   }
 
