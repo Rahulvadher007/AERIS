@@ -6,7 +6,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "${API_URL}/:path*"
+      "destination": "https://aeris-rl4g.onrender.com/:path*"
     }
   ]
 }
