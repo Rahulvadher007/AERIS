@@ -1,4 +1,6 @@
 import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
+import { HttpService } from '@nestjs/axios';
+import { lastValueFrom } from 'rxjs';
 import { ForecastRepository } from './forecast.repository';
 import { StationsService } from '../stations/stations.service';
 
@@ -9,6 +11,7 @@ export class ForecastService {
   constructor(
     private readonly repository: ForecastRepository,
     private readonly stationsService: StationsService,
+    private readonly httpService: HttpService,
   ) {}
 
   async generateForecast(stationCode: string, horizon: string) {
@@ -33,13 +36,10 @@ export class ForecastService {
     // 3. Request Prediction from XGBoost Service
     let mlResponse;
     try {
-      const res = await fetch(`${this.mlServiceUrl}/predict/${horizon}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ features })
-      });
-      if (!res.ok) throw new Error(await res.text());
-      mlResponse = await res.json();
+      const { data } = await lastValueFrom(
+        this.httpService.post(`${this.mlServiceUrl}/predict/${horizon}`, { features }, { timeout: 15000 }),
+      );
+      mlResponse = data;
     } catch (err: any) {
       console.warn("ML Service offline, using calculated rule-based forecast fallback:", err.message);
       
@@ -96,10 +96,26 @@ export class ForecastService {
   async getForecast48h(stationCode: string) { return this.generateForecast(stationCode, '48h'); }
   async getForecast72h(stationCode: string) { return this.generateForecast(stationCode, '72h'); }
 
+  async saveForecastResult(stationId: string, result: any, horizon: string) {
+    const hoursAhead = parseInt(horizon.replace('h', ''));
+    await this.repository.saveForecast({
+      stationId,
+      forecastAQI: result.forecastAQI,
+      confidence: result.confidence,
+      hoursAhead,
+      category: result.category,
+      riskLevel: result.riskLevel,
+      forecastType: horizon,
+      modelVersion: 'v1.0',
+    });
+  }
+
   async triggerRetraining() {
     try {
-      const res = await fetch(`${this.mlServiceUrl}/ml/train`, { method: 'POST' });
-      return await res.json();
+      const { data } = await lastValueFrom(
+        this.httpService.post(`${this.mlServiceUrl}/ml/train`, {}, { timeout: 5000 }),
+      );
+      return data;
     } catch(err) {
       throw new InternalServerErrorException("Failed to trigger ML training pipeline.");
     }
