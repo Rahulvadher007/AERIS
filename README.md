@@ -14,7 +14,7 @@
   </p>
 
   <p>
-    <a href="https://frontend-e9or9jxnp-nekmpatel007-9288s-projects.vercel.app"><img src="https://img.shields.io/badge/Live%20Demo-Vercel-000?style=for-the-badge&logo=vercel" alt="Live Demo" /></a>
+    <a href="https://aeris-ovtxw8zc2-nekmpatel007-9288s-projects.vercel.app"><img src="https://img.shields.io/badge/Live%20Demo-Vercel-000?style=for-the-badge&logo=vercel" alt="Live Demo" /></a>
     <a href="https://drive.google.com/file/d/1QpR-9YOSrDlM-bUBR-J3NP0Vq5Mwn8V7/view?usp=drive_link"><img src="https://img.shields.io/badge/Watch%20Demo-Video-FF0000?style=for-the-badge&logo=youtube" alt="Demo Video" /></a>
   </p>
 </div>
@@ -33,11 +33,11 @@ Watch the full demo of AERIS in action:
 
 ## Live Deployment
 
-| Service | URL |
-|---------|-----|
-| **Frontend** | https://frontend-e9or9jxnp-nekmpatel007-9288s-projects.vercel.app |
-| **Backend** | https://aeris-backend.onrender.com |
-| **ML Service** | https://aeris-ml-service.onrender.com |
+| Service | Platform | URL |
+|---------|----------|-----|
+| **Frontend** | Vercel | https://aeris-ovtxw8zc2-nekmpatel007-9288s-projects.vercel.app |
+| **Backend** | Render | https://aeris-rl4g.onrender.com |
+| **ML Service** | Render | https://aeris-ml-service.onrender.com |
 
 ---
 
