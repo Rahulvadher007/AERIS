@@ -4,7 +4,6 @@ import { lastValueFrom } from 'rxjs';
 import { ForecastRepository } from './forecast.repository';
 import { StationsService } from '../stations/stations.service';
 import { PrismaService } from '../../database/prisma.service';
-import * as pd from 'node-pandas';
 
 @Injectable()
 export class ForecastService {
