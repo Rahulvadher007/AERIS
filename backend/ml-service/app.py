@@ -1,6 +1,8 @@
 import os
+import json
 import joblib
 import pandas as pd
+import numpy as np
 from fastapi import FastAPI, BackgroundTasks, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -49,23 +51,47 @@ async def load_models():
                 MODELS[target][horizon] = None
     logger.info(f"Loaded {sum(len(v) for v in MODELS.values())} models")
 
-# Approximate sub-index conversion to standard AQI scale
-# Real formula uses breakpoints, but here we do a direct proxy mapping for demonstration
-def pm25_to_aqi(pm25: float) -> float:
-    return pm25 * 2.5 # Proxy estimate
-    
-def pm10_to_aqi(pm10: float) -> float:
-    return pm10 * 1.5 # Proxy estimate
+# EPA/CPCB breakpoint tables for AQI computation
+PM25_BREAKPOINTS = [
+    (0.0, 30.0, 0, 50),
+    (30.1, 60.0, 51, 100),
+    (60.1, 90.0, 101, 200),
+    (90.1, 120.0, 201, 300),
+    (120.1, 250.0, 301, 400),
+    (250.1, float('inf'), 401, 500),
+]
 
-def compute_aqi_from_pollutants(aqi_pred, pm25_pred, pm10_pred):
-    # Determine future AQI from pollutant predictions
-    derived_pm25_aqi = pm25_to_aqi(pm25_pred)
-    derived_pm10_aqi = pm10_to_aqi(pm10_pred)
-    
-    # Final AQI is technically the maximum of the sub-indices. 
-    # We blend the direct AQI model prediction with the pollutant sub-indexes.
-    final_aqi = max(aqi_pred, derived_pm25_aqi, derived_pm10_aqi)
-    return float(final_aqi)
+PM10_BREAKPOINTS = [
+    (0.0, 50.0, 0, 50),
+    (50.1, 100.0, 51, 100),
+    (100.1, 250.0, 101, 200),
+    (250.1, 350.0, 201, 300),
+    (350.1, 430.0, 301, 400),
+    (430.1, float('inf'), 401, 500),
+]
+
+
+def concentration_to_aqi(concentration: float, breakpoints: list) -> float:
+    for c_low, c_high, i_low, i_high in breakpoints:
+        if c_low <= concentration <= c_high:
+            return ((i_high - i_low) / (c_high - c_low)) * (concentration - c_low) + i_low
+    return i_high
+
+
+def aqi_from_pollutants(pm25: float, pm10: float) -> float:
+    sub_indices = [
+        concentration_to_aqi(pm25, PM25_BREAKPOINTS),
+        concentration_to_aqi(pm10, PM10_BREAKPOINTS),
+    ]
+    return float(max(sub_indices))
+
+
+# Load validation RMSE from training metrics for confidence computation
+try:
+    with open('model/metrics.json') as f:
+        _METRICS = json.load(f)
+except (FileNotFoundError, json.JSONDecodeError):
+    _METRICS = {}
 
 def predict_horizon(horizon: str, features: Dict[str, float]):
     df = pd.DataFrame([features])
@@ -93,7 +119,11 @@ def predict_horizon(horizon: str, features: Dict[str, float]):
     pm25_pred = model_pm25.predict(X)[0]
     pm10_pred = model_pm10.predict(X)[0]
     
-    final_aqi = compute_aqi_from_pollutants(aqi_pred, pm25_pred, pm10_pred)
+    final_aqi = aqi_from_pollutants(pm25_pred, pm10_pred)
+    
+    # Derive confidence from validation RMSE instead of hardcoded 0.85
+    rmse = _METRICS.get(horizon, {}).get('aqi', {}).get('RMSE', final_aqi * 0.2)
+    confidence = max(0.5, min(0.98, 1.0 - (rmse / (final_aqi + 1))))
     
     # Categorize
     category = "Good"
@@ -112,7 +142,7 @@ def predict_horizon(horizon: str, features: Dict[str, float]):
         "forecastAQI": round(final_aqi, 2),
         "forecastPM25": round(float(pm25_pred), 2),
         "forecastPM10": round(float(pm10_pred), 2),
-        "confidence": 0.85, # In a real scenario, this would use prediction intervals or variance
+        "confidence": round(confidence, 4),
         "category": category,
         "riskLevel": risk_level
     }
