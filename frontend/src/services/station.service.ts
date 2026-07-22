@@ -1,10 +1,16 @@
 import { api } from '@/lib/api/api';
 import { Station } from '@/types/station';
 
+interface PaginatedStations {
+  data: Station[];
+  meta: { total: number; page: number; limit: number; totalPages: number };
+}
+
 export const stationService = {
   async getAll(city?: string): Promise<Station[]> {
     const params = city ? { city } : undefined;
-    return api.get<Station[]>('/stations', { params });
+    const result = await api.get<PaginatedStations>('/stations', { params });
+    return result.data;
   },
 
   async getCities(): Promise<string[]> {

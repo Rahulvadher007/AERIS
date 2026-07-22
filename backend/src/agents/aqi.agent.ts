@@ -12,7 +12,9 @@ export class AQIAgent {
    * Also computes the CPCB AQI score.
    */
   async processReadings(readings: any[]): Promise<any[]> {
-    this.logger.log(`AQI Agent: Analyzing and validating ${readings.length} raw readings...`);
+    this.logger.log(
+      `AQI Agent: Analyzing and validating ${readings.length} raw readings...`,
+    );
     const processed = [];
 
     for (const r of readings) {
@@ -28,7 +30,9 @@ export class AQIAgent {
       });
 
       if (isOutlier) {
-        this.logger.warn(`AQI Agent: Flagged anomaly for station ${r.stationId} at ${r.timestamp}: AQI=${r.aqi}, PM2.5=${r.pm25}`);
+        this.logger.warn(
+          `AQI Agent: Flagged anomaly for station ${r.stationId} at ${r.timestamp}: AQI=${r.aqi}, PM2.5=${r.pm25}`,
+        );
       }
     }
 

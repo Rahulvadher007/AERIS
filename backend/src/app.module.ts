@@ -1,8 +1,10 @@
-import { Module } from '@nestjs/common';
+import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DatabaseModule } from './database/database.module';
+import { CacheModule } from './common/cache/cache.module';
 import { StationsModule } from './modules/stations/stations.module';
 import { AqiModule } from './modules/aqi/aqi.module';
 import { ForecastModule } from './modules/forecast/forecast.module';
@@ -18,10 +20,16 @@ import { LandUseModule } from './modules/landuse/landuse.module';
 import { VulnerabilityModule } from './modules/vulnerability/vulnerability.module';
 import { EvidenceModule } from './modules/evidence/evidence.module';
 import { AgentsModule } from './agents/agents.module';
+import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware';
+import { RateLimiterMiddleware } from './common/middleware/rate-limiter.middleware';
+import { MetricsModule } from './common/metrics/metrics.module';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
     ScheduleModule.forRoot(),
+    CacheModule,
+    MetricsModule,
     DatabaseModule,
     StationsModule,
     AqiModule,
@@ -42,4 +50,9 @@ import { AgentsModule } from './agents/agents.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(CorrelationIdMiddleware).forRoutes('*');
+    consumer.apply(RateLimiterMiddleware).forRoutes('*');
+  }
+}

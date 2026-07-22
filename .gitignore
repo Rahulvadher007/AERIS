@@ -28,6 +28,9 @@ docs/superpowers/plans/
 # ML service
 backend/ml-service/data/
 
+# Worktrees
+.worktrees/
+
 # Duplicate root-level assets
 /frontend/video.mp4
 /frontend/ChatGPT Image*.png

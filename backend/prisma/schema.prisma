@@ -59,6 +59,7 @@ model Hotspot {
 
   zone Zone? @relation(fields: [zoneId], references: [id])
 
+  @@index([detectedAt(sort: Desc)])
   @@map("hotspots")
 }
 
@@ -81,6 +82,7 @@ model WeatherData {
   @@index([temperature])
   @@index([humidity])
   @@index([windSpeed])
+  @@index([stationId, timestamp(sort: Desc)])
   @@map("weather_data")
 }
 
@@ -103,6 +105,7 @@ model AqiReading {
   @@index([stationId])
   @@index([timestamp])
   @@index([aqi])
+  @@index([stationId, timestamp(sort: Desc)])
   @@map("aqi_readings")
 }
 
@@ -120,8 +123,7 @@ model ForecastResult {
 
   station Station @relation(fields: [stationId], references: [id])
 
-  @@index([stationId])
-  @@index([forecastDate])
+  @@index([stationId, forecastDate])
   @@map("forecast_results")
 }
 

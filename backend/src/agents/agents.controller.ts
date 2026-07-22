@@ -24,16 +24,52 @@ export class AgentsController {
     return {
       success: true,
       agents: [
-        { name: 'AQIAgent', status: 'ACTIVE', role: 'Data cleaning and AQI validation' },
-        { name: 'WeatherAgent', status: 'ACTIVE', role: 'Meteorological dispersion modeling' },
-        { name: 'TrafficAgent', status: 'ACTIVE', role: 'Vehicular emission impact analysis' },
-        { name: 'ForecastAgent', status: 'ACTIVE', role: 'XGBoost predictive forecasting' },
-        { name: 'HotspotAgent', status: 'ACTIVE', role: 'Spatial DBSCAN clustering' },
-        { name: 'SourceAttributionAgent', status: 'ACTIVE', role: 'Source apportionment analysis' },
-        { name: 'InterventionAgent', status: 'ACTIVE', role: 'Mitigation planning and Counterfactual simulation' },
-        { name: 'CitizenAdvisoryAgent', status: 'ACTIVE', role: 'Plain-language advisory alerts' },
-        { name: 'CoordinatorAgent', status: 'ACTIVE', role: 'Multi-agent system orchestration' },
-      ]
+        {
+          name: 'AQIAgent',
+          status: 'ACTIVE',
+          role: 'Data cleaning and AQI validation',
+        },
+        {
+          name: 'WeatherAgent',
+          status: 'ACTIVE',
+          role: 'Meteorological dispersion modeling',
+        },
+        {
+          name: 'TrafficAgent',
+          status: 'ACTIVE',
+          role: 'Vehicular emission impact analysis',
+        },
+        {
+          name: 'ForecastAgent',
+          status: 'ACTIVE',
+          role: 'XGBoost predictive forecasting',
+        },
+        {
+          name: 'HotspotAgent',
+          status: 'ACTIVE',
+          role: 'Spatial DBSCAN clustering',
+        },
+        {
+          name: 'SourceAttributionAgent',
+          status: 'ACTIVE',
+          role: 'Source apportionment analysis',
+        },
+        {
+          name: 'InterventionAgent',
+          status: 'ACTIVE',
+          role: 'Mitigation planning and Counterfactual simulation',
+        },
+        {
+          name: 'CitizenAdvisoryAgent',
+          status: 'ACTIVE',
+          role: 'Plain-language advisory alerts',
+        },
+        {
+          name: 'CoordinatorAgent',
+          status: 'ACTIVE',
+          role: 'Multi-agent system orchestration',
+        },
+      ],
     };
   }
 }

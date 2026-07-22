@@ -2,13 +2,14 @@ import { Controller, Get, Post, Query, Body, Param } from '@nestjs/common';
 import { TrafficService } from './traffic.service';
 import { TrafficAQICorrelationService } from './traffic-aqi.service';
 import { ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import { OffsetPaginationDto } from '../../common/dto/pagination.dto';
 
 @ApiTags('Traffic Intelligence')
 @Controller('traffic')
 export class TrafficController {
   constructor(
     private readonly trafficService: TrafficService,
-    private readonly correlationService: TrafficAQICorrelationService
+    private readonly correlationService: TrafficAQICorrelationService,
   ) {}
 
   @Post()
@@ -25,11 +26,20 @@ export class TrafficController {
   @ApiQuery({ name: 'endDate', required: false })
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })
-  async getHistory(@Query() query: any) {
+  async getHistory(
+    @Query() pagination: OffsetPaginationDto,
+    @Query('roadSegment') roadSegment?: string,
+    @Query('zoneId') zoneId?: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
     return this.trafficService.getHistory({
-      ...query,
-      page: query.page ? parseInt(query.page) : 1,
-      limit: query.limit ? parseInt(query.limit) : 50,
+      roadSegment,
+      zoneId,
+      startDate,
+      endDate,
+      page: pagination.page ?? 1,
+      limit: pagination.limit ?? 50,
     });
   }
 
@@ -58,8 +68,13 @@ export class TrafficController {
   }
 
   @Get('correlate/:roadId')
-  @ApiOperation({ summary: 'Correlate traffic congestion on a road to AQI impacts' })
-  async correlateTrafficAQI(@Param('roadId') roadId: string, @Query('timestamp') timestamp: string) {
+  @ApiOperation({
+    summary: 'Correlate traffic congestion on a road to AQI impacts',
+  })
+  async correlateTrafficAQI(
+    @Param('roadId') roadId: string,
+    @Query('timestamp') timestamp: string,
+  ) {
     const time = timestamp ? new Date(timestamp) : new Date();
     return this.correlationService.correlateTrafficWithAQI(roadId, time);
   }

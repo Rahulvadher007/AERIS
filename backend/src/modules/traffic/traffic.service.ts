@@ -12,7 +12,15 @@ export class TrafficService {
   }
 
   async getHistory(filters: any) {
-    return this.repository.getTrafficHistory(filters);
+    const { page = 1, limit = 50 } = filters;
+    const result = await this.repository.getTrafficHistory(filters);
+    return {
+      data: result.data,
+      total: result.total,
+      page,
+      limit,
+      totalPages: Math.ceil(result.total / limit),
+    };
   }
 
   async getLatestTraffic(city?: string) {
@@ -29,9 +37,9 @@ export class TrafficService {
 
   async getCongestionHotspots(city?: string) {
     const hotspots = await this.repository.getCongestionHotspots(city);
-    
+
     // Generate FeatureCollection for hotspots
-    const features = hotspots.map(h => {
+    const features = hotspots.map((h) => {
       const lineString = h.road.geometry as any;
       return turf.feature(lineString, {
         roadName: h.road.roadName,

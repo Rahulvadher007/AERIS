@@ -30,13 +30,20 @@ export class AqiRepository {
         },
       },
     });
-    return stations.map(st => ({
+    return stations.map((st) => ({
       station: { id: st.id, code: st.stationCode, name: st.stationName },
       latestReading: st.aqiReadings[0] || null,
     }));
   }
 
-  async findHistory(stationId?: string, startDate?: Date, endDate?: Date, skip = 0, take = 50, city?: string) {
+  async findHistory(
+    stationId?: string,
+    startDate?: Date,
+    endDate?: Date,
+    skip = 0,
+    take = 50,
+    city?: string,
+  ) {
     const where: any = {};
     if (stationId) where.stationId = stationId;
     if (city) where.station = { city };
@@ -70,9 +77,9 @@ export class AqiRepository {
       _max: { aqi: true },
       _count: { id: true },
     });
-    
+
     const stationsCount = await this.prisma.station.count({
-      where: city ? { city } : undefined
+      where: city ? { city } : undefined,
     });
 
     return {

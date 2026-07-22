@@ -1,14 +1,14 @@
-import { schedules } from "@trigger.dev/sdk/v3";
+import { schedules } from '@trigger.dev/sdk/v3';
 
 export const ingestDataTask = schedules.task({
-  id: "ingest-data",
-  cron: "0 * * * *", // every hour
+  id: 'ingest-data',
+  cron: '0 * * * *', // every hour
   run: async (payload: any, { ctx }: { ctx: any }) => {
-    console.log("Trigger.dev: Starting hourly ingestion task...");
-    
+    console.log('Trigger.dev: Starting hourly ingestion task...');
+
     // Call the backend API to trigger ingestion sync
-    const res = await fetch("http://localhost:3000/ingestion/sync", {
-      method: "POST",
+    const res = await fetch('http://localhost:3000/ingestion/sync', {
+      method: 'POST',
     });
 
     if (!res.ok) {
@@ -16,7 +16,7 @@ export const ingestDataTask = schedules.task({
     }
 
     const data = await res.json();
-    console.log("Trigger.dev: Ingestion completed successfully.", data);
+    console.log('Trigger.dev: Ingestion completed successfully.', data);
     return data;
   },
 });

@@ -11,11 +11,15 @@ export class StationsRepository {
     return this.prisma.station.create({ data });
   }
 
-  async findAll(city?: string) {
-    if (city) {
-      return this.prisma.station.findMany({ where: { city } });
-    }
-    return this.prisma.station.findMany();
+  async findAll(city?: string, skip = 0, take?: number) {
+    const where: any = {};
+    if (city) where.city = city;
+
+    const [data, total] = await Promise.all([
+      this.prisma.station.findMany({ where, skip, ...(take !== undefined ? { take } : {}) }),
+      this.prisma.station.count({ where }),
+    ]);
+    return { data, total };
   }
 
   async findUniqueCities() {
@@ -23,7 +27,10 @@ export class StationsRepository {
       select: { city: true },
       distinct: ['city'],
     });
-    return stations.map(s => s.city).filter(Boolean).sort();
+    return stations
+      .map((s) => s.city)
+      .filter(Boolean)
+      .sort();
   }
 
   async findById(id: string) {

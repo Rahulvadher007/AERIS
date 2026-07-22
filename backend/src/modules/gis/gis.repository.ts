@@ -15,15 +15,17 @@ export class GisRepository {
       },
     });
 
-    return stations.map(st => {
-      const reading = st.aqiReadings[0];
-      return {
-        stationId: st.id,
-        latitude: st.latitude,
-        longitude: st.longitude,
-        aqi: reading ? reading.aqi : null,
-      };
-    }).filter(s => s.aqi !== null);
+    return stations
+      .map((st) => {
+        const reading = st.aqiReadings[0];
+        return {
+          stationId: st.id,
+          latitude: st.latitude,
+          longitude: st.longitude,
+          aqi: reading ? reading.aqi : null,
+        };
+      })
+      .filter((s) => s.aqi !== null);
   }
 
   async getAllZones() {

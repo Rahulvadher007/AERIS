@@ -5,7 +5,9 @@ import { ApiTags, ApiOperation } from '@nestjs/swagger';
 @ApiTags('Recommendations')
 @Controller('recommendations')
 export class RecommendationsController {
-  constructor(private readonly recommendationsService: RecommendationsService) {}
+  constructor(
+    private readonly recommendationsService: RecommendationsService,
+  ) {}
 
   @Get()
   @ApiOperation({ summary: 'Get rule-based actionable recommendations' })

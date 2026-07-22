@@ -11,9 +11,13 @@ export class InterventionAgent {
    * Generates intervention and mitigation plans for all zones.
    */
   async planInterventions(): Promise<any[]> {
-    this.logger.log('Intervention Agent: Running intervention planning and impact simulation sweep...');
+    this.logger.log(
+      'Intervention Agent: Running intervention planning and impact simulation sweep...',
+    );
     const plans = await this.interventionsService.generateInterventions();
-    this.logger.log(`Intervention Agent: Generated ${plans.length} intervention plans.`);
+    this.logger.log(
+      `Intervention Agent: Generated ${plans.length} intervention plans.`,
+    );
     return plans;
   }
 }

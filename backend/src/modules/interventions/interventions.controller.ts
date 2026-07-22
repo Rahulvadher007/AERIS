@@ -8,7 +8,10 @@ export class InterventionsController {
   constructor(private readonly interventionsService: InterventionsService) {}
 
   @Post('generate')
-  @ApiOperation({ summary: 'Run analysis across all zones and generate interventions automatically.' })
+  @ApiOperation({
+    summary:
+      'Run analysis across all zones and generate interventions automatically.',
+  })
   async generate() {
     return this.interventionsService.generateInterventions();
   }

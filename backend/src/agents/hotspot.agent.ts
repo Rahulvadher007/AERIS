@@ -11,10 +11,14 @@ export class HotspotAgent {
    * Runs the DBSCAN clustering algorithm to identify spatial pollution hotspots.
    */
   async detectHotspots(): Promise<any> {
-    this.logger.log('Hotspot Agent: Running spatial DBSCAN clustering sweep...');
+    this.logger.log(
+      'Hotspot Agent: Running spatial DBSCAN clustering sweep...',
+    );
     await this.hotspotsService.calculateAndStoreHotspots();
     const activeHotspots = await this.hotspotsService.getLatestHotspots();
-    this.logger.log(`Hotspot Agent: Detected ${activeHotspots.length} active hotspots.`);
+    this.logger.log(
+      `Hotspot Agent: Detected ${activeHotspots.length} active hotspots.`,
+    );
     return activeHotspots;
   }
 }

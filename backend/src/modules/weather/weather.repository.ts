@@ -29,13 +29,25 @@ export class WeatherRepository {
         },
       },
     });
-    return stations.map(st => ({
-      station: { id: st.id, code: st.stationCode, name: st.stationName, city: st.city },
+    return stations.map((st) => ({
+      station: {
+        id: st.id,
+        code: st.stationCode,
+        name: st.stationName,
+        city: st.city,
+      },
       latestWeather: st.weatherData[0] || null,
     }));
   }
 
-  async findHistory(stationId?: string, city?: string, startDate?: Date, endDate?: Date, skip = 0, take = 50) {
+  async findHistory(
+    stationId?: string,
+    city?: string,
+    startDate?: Date,
+    endDate?: Date,
+    skip = 0,
+    take = 50,
+  ) {
     const where: any = {};
     if (stationId) where.stationId = stationId;
     if (city) {
@@ -80,7 +92,7 @@ export class WeatherRepository {
       _max: { temperature: true },
       _count: { id: true },
     });
-    
+
     return {
       averageTemperature: agg._avg.temperature,
       averageHumidity: agg._avg.humidity,

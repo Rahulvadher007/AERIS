@@ -6,7 +6,7 @@ export class InterventionScoringEngine {
     hotspotCount: number,
     windSpeed: number,
     humidity: number,
-    temperature: number
+    temperature: number,
   ): { score: number; riskLevel: string; priority: string } {
     let score = 0;
 
@@ -24,7 +24,7 @@ export class InterventionScoringEngine {
     } else if (forecastAQI > aqi * 1.05) {
       score += 12; // Moderate upcoming degradation
     } else if (forecastAQI > aqi * 0.95) {
-      score += 5;  // Stable
+      score += 5; // Stable
     } // If improving significantly, 0 additional points
 
     // 3. Traffic Risk (max 20 points)

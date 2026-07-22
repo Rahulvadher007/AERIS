@@ -42,8 +42,19 @@ export class ForecastRepository {
     return agg._avg.aqi;
   }
 
-  async saveForecast(data: { stationId: string, forecastAQI: number, confidence: number, hoursAhead: number, category: string, riskLevel: string, forecastType: string, modelVersion: string }) {
-    const forecastDate = new Date(Date.now() + data.hoursAhead * 60 * 60 * 1000);
+  async saveForecast(data: {
+    stationId: string;
+    forecastAQI: number;
+    confidence: number;
+    hoursAhead: number;
+    category: string;
+    riskLevel: string;
+    forecastType: string;
+    modelVersion: string;
+  }) {
+    const forecastDate = new Date(
+      Date.now() + data.hoursAhead * 60 * 60 * 1000,
+    );
     return this.prisma.forecastResult.create({
       data: {
         stationId: data.stationId,

@@ -22,8 +22,14 @@ export class EvidenceService {
   }
 
   private async signalToIntervention(): Promise<number> {
-    const hotspots = await this.prisma.hotspot.findMany({ orderBy: { detectedAt: 'desc' }, take: 50 });
-    const interventions = await this.prisma.intervention.findMany({ orderBy: { createdAt: 'desc' }, take: 50 });
+    const hotspots = await this.prisma.hotspot.findMany({
+      orderBy: { detectedAt: 'desc' },
+      take: 50,
+    });
+    const interventions = await this.prisma.intervention.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    });
     if (!hotspots.length || !interventions.length) return 0;
     return 42;
   }

@@ -1,14 +1,14 @@
-import { schedules } from "@trigger.dev/sdk/v3";
+import { schedules } from '@trigger.dev/sdk/v3';
 
 export const forecastAqiTask = schedules.task({
-  id: "forecast-aqi",
-  cron: "0 2 * * *", // daily at 02:00
+  id: 'forecast-aqi',
+  cron: '0 2 * * *', // daily at 02:00
   run: async (payload: any, { ctx }: { ctx: any }) => {
-    console.log("Trigger.dev: Starting daily forecast task...");
+    console.log('Trigger.dev: Starting daily forecast task...');
 
     // Call the Coordinator Agent manual sweep endpoint to run the multi-agent workflow
-    const res = await fetch("http://localhost:3000/agents/coordinate", {
-      method: "POST",
+    const res = await fetch('http://localhost:3000/agents/coordinate', {
+      method: 'POST',
     });
 
     if (!res.ok) {
@@ -16,7 +16,10 @@ export const forecastAqiTask = schedules.task({
     }
 
     const data = await res.json();
-    console.log("Trigger.dev: Orchestration sweep completed successfully.", data);
+    console.log(
+      'Trigger.dev: Orchestration sweep completed successfully.',
+      data,
+    );
     return data;
   },
 });
