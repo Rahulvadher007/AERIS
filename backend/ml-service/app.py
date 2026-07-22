@@ -6,6 +6,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Dict
 from train import train_pipeline
+from cachetools import TTLCache
+import logging
+
+logger = logging.getLogger(__name__)
+
+MODELS: dict[str, dict[str, object]] = {}
+prediction_cache = TTLCache(maxsize=2048, ttl=3600)
 
 app = FastAPI(title="Urban AI - ML Forecasting API", version="1.0")
 
@@ -21,10 +28,26 @@ class PredictRequest(BaseModel):
     features: Dict[str, float]
 
 def get_model(target: str, horizon: str):
-    path = f"model/model_{target}_{horizon}.pkl"
-    if not os.path.exists(path):
-        raise HTTPException(status_code=503, detail=f"Model {path} not trained yet.")
-    return joblib.load(path)
+    model = MODELS.get(target, {}).get(horizon)
+    if model is None:
+        raise HTTPException(status_code=503, detail=f"Model {target}_{horizon} not loaded.")
+    return model
+
+@app.on_event("startup")
+async def load_models():
+    targets = ['aqi', 'pm25', 'pm10']
+    horizons = ['24h', '48h', '72h']
+    for target in targets:
+        MODELS[target] = {}
+        for horizon in horizons:
+            path = f"model/model_{target}_{horizon}.pkl"
+            if os.path.exists(path):
+                MODELS[target][horizon] = joblib.load(path)
+                logger.info(f"Loaded {path}")
+            else:
+                logger.warning(f"Model not found: {path}")
+                MODELS[target][horizon] = None
+    logger.info(f"Loaded {sum(len(v) for v in MODELS.values())} models")
 
 # Approximate sub-index conversion to standard AQI scale
 # Real formula uses breakpoints, but here we do a direct proxy mapping for demonstration
