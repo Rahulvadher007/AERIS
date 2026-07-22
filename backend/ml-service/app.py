@@ -6,7 +6,9 @@ import numpy as np
 from fastapi import FastAPI, BackgroundTasks, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import Dict
+from typing import Dict, List
+import psycopg2
+import psycopg2.extras
 from train import train_pipeline
 from cachetools import TTLCache
 import logging
@@ -28,6 +30,15 @@ app.add_middleware(
 
 class PredictRequest(BaseModel):
     features: Dict[str, float]
+
+class BatchPredictRequest(BaseModel):
+    stations: List[str]
+
+def get_db_connection():
+    DATABASE_URL = os.getenv('DATABASE_URL')
+    if not DATABASE_URL:
+        raise HTTPException(status_code=503, detail="DATABASE_URL not configured")
+    return psycopg2.connect(DATABASE_URL)
 
 def get_model(target: str, horizon: str):
     model = MODELS.get(target, {}).get(horizon)
@@ -93,6 +104,93 @@ try:
 except (FileNotFoundError, json.JSONDecodeError):
     _METRICS = {}
 
+FEATURE_COLS = [
+    'hour', 'day', 'month', 'dayOfWeek', 'temperature', 'humidity',
+    'windSpeed', 'windDirection', 'pressure', 'rainfall',
+    'congestionScore', 'vehicleCount', 'aqi', 'pm25', 'pm10',
+    'aqi_1h', 'aqi_3h', 'aqi_6h', 'aqi_12h', 'aqi_24h',
+    'rollingAvg24h', 'rollingAvg72h', 'rollingMax24h', 'rollingMin24h'
+]
+
+
+def build_station_features(conn, station_code: str) -> dict | None:
+    with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+        cur.execute("""
+            WITH latest_aqi AS (
+                SELECT timestamp, aqi, pm25, pm10
+                FROM aqi_readings ar
+                JOIN stations s ON s.id = ar."stationId"
+                WHERE s."stationCode" = %s
+                ORDER BY ar.timestamp DESC
+                LIMIT 25
+            ),
+            weather AS (
+                SELECT temperature, humidity, "windSpeed", "windDirection", pressure, rainfall
+                FROM weather_data wd
+                JOIN stations s ON s.id = wd."stationId"
+                WHERE s."stationCode" = %s
+                ORDER BY wd.timestamp DESC
+                LIMIT 1
+            ),
+            traffic AS (
+                SELECT AVG(t."congestionScore") as congestionscore,
+                       SUM(t."vehicleCount") as vehiclecount
+                FROM traffic_data t
+                WHERE t.timestamp >= COALESCE((SELECT MAX(timestamp) FROM latest_aqi), NOW() - INTERVAL '1 hour')
+            )
+            SELECT * FROM (SELECT * FROM latest_aqi LIMIT 1) la, weather, traffic
+        """, (station_code, station_code))
+
+        row = cur.fetchone()
+
+    if row is None or row.get('aqi') is None:
+        return None
+
+    with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+        cur.execute("""
+            SELECT aqi FROM aqi_readings ar
+            JOIN stations s ON s.id = ar."stationId"
+            WHERE s."stationCode" = %s
+            ORDER BY ar.timestamp DESC
+            LIMIT 25
+        """, (station_code,))
+        aqi_rows = cur.fetchall()
+
+    ts = row['timestamp']
+    aqi_series = [r['aqi'] for r in reversed(aqi_rows)]
+
+    def safe_get(arr, idx):
+        return arr[-(idx + 1)] if len(arr) > idx + 1 else arr[0] if arr else 0.0
+
+    features = {
+        'hour': ts.hour,
+        'day': ts.day,
+        'month': ts.month,
+        'dayOfWeek': ts.weekday(),
+        'temperature': float(row['temperature'] or 0),
+        'humidity': float(row['humidity'] or 0),
+        'windSpeed': float(row['windSpeed'] or 0),
+        'windDirection': float(row['windDirection'] or 0),
+        'pressure': float(row['pressure'] or 0),
+        'rainfall': float(row['rainfall'] or 0),
+        'congestionScore': float(row['congestionscore'] or 0),
+        'vehicleCount': float(row['vehiclecount'] or 0),
+        'aqi': float(row['aqi'] or 0),
+        'pm25': float(row['pm25'] or 0),
+        'pm10': float(row['pm10'] or 0),
+        'aqi_1h': safe_get(aqi_series, 1),
+        'aqi_3h': safe_get(aqi_series, 3),
+        'aqi_6h': safe_get(aqi_series, 6),
+        'aqi_12h': safe_get(aqi_series, 12),
+        'aqi_24h': safe_get(aqi_series, 24),
+        'rollingAvg24h': float(pd.Series(aqi_series[-24:]).mean()) if len(aqi_series) >= 24 else float(pd.Series(aqi_series).mean()),
+        'rollingAvg72h': float(pd.Series(aqi_series).mean()),
+        'rollingMax24h': float(pd.Series(aqi_series[-24:]).max()) if len(aqi_series) >= 24 else float(pd.Series(aqi_series).max()),
+        'rollingMin24h': float(pd.Series(aqi_series[-24:]).min()) if len(aqi_series) >= 24 else float(pd.Series(aqi_series).min()),
+    }
+    return features
+
+
 def predict_horizon(horizon: str, features: Dict[str, float]):
     df = pd.DataFrame([features])
     
@@ -154,8 +252,42 @@ async def predict(horizon: str, req: PredictRequest):
     
     return predict_horizon(horizon, req.features)
 
+@app.post("/predict/batch")
+async def predict_batch(req: BatchPredictRequest, horizon: str = "24h"):
+    if horizon not in ['24h', '48h', '72h']:
+        raise HTTPException(status_code=400, detail="Horizon must be 24h, 48h, or 72h")
+
+    results = []
+    conn = get_db_connection()
+    try:
+        for station_code in req.stations:
+            cache_key = f"{station_code}_{horizon}"
+            cached = prediction_cache.get(cache_key)
+            if cached:
+                results.append(cached)
+                continue
+
+            features = build_station_features(conn, station_code)
+            if features is None:
+                results.append({"stationCode": station_code, "error": "No data"})
+                continue
+
+            result = predict_horizon(horizon, features)
+            conf_lower = max(0, result["forecastAQI"] * (1 - result["confidence"]))
+            conf_upper = result["forecastAQI"] * (1 + result["confidence"])
+            result["confidence_lower"] = round(conf_lower, 2)
+            result["confidence_upper"] = round(conf_upper, 2)
+            result["stationCode"] = station_code
+            prediction_cache[cache_key] = result
+            results.append(result)
+    finally:
+        conn.close()
+
+    return {"results": results}
+
 @app.post("/ml/train")
 async def train(background_tasks: BackgroundTasks):
+    prediction_cache.clear()
     background_tasks.add_task(train_pipeline)
     return {"message": "Training pipeline started in the background."}
 
