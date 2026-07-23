@@ -16,7 +16,11 @@ export class HotspotsService implements OnModuleInit {
   ) {}
 
   async onModuleInit() {
-    await this.calculateAndStoreHotspots();
+    try {
+      await this.calculateAndStoreHotspots();
+    } catch (e) {
+      // DB may not be ready yet on cold start — hotspots will be computed on first request
+    }
   }
 
   async calculateAndStoreHotspots() {
