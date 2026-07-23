@@ -11,6 +11,20 @@
 
 # Build
 **/dist/
+*.tsbuildinfo
+backend/prisma.config.d.ts
+backend/prisma.config.js
+backend/prisma.config.js.map
+backend/prisma.config.ts
+backend/prisma/seed.d.ts
+backend/prisma/seed.js
+backend/prisma/seed.js.map
+backend/scripts/verify-prisma.d.ts
+backend/scripts/verify-prisma.js
+backend/scripts/verify-prisma.js.map
+backend/trigger.config.d.ts
+backend/trigger.config.js
+backend/trigger.config.js.map
 
 # Python
 **/__pycache__/
